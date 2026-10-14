@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2545">
+  <title>Certificados – ILES/ULBRA Itumbiara</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ulbra: { 950: '#071a33', 900: '#0b2545', 800: '#13315c', 700: '#1c4373', 600: '#24548f', 100: '#dde7f4', 50: '#f1f5fb' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    [hidden] { display: none !important; }
+    .spin { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: sh 1.2s infinite; }
+    @keyframes sh { to { background-position: -200% 0; } }
+    .cert-preview { container-type: inline-size; aspect-ratio: 842 / 595; background-size: 100% 100%; background-color: #fff; }
+    .cert-preview .corpo { position: absolute; left: 8.45%; top: 33.5%; width: 81.6%; font-family: Calibri, Carlito, Arial, sans-serif; font-size: calc(12 / 842 * 100cqw); line-height: 2.1; text-align: justify; color: #000; }
+    .cert-preview .data { position: absolute; right: 9.9%; top: 61.6%; font-family: Calibri, Carlito, Arial, sans-serif; font-size: calc(12 / 842 * 100cqw); color: #000; }
+    .tab-ativa { background: #fff; color: #0b2545; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    input:focus, select:focus, textarea:focus { outline: none; }
+  </style>
+</head>
+<body class="bg-ulbra-50 text-slate-800 font-sans antialiased min-h-screen">
+
+<!-- ===================================================================== -->
+<!--  MÓDULO DO PARTICIPANTE (acesso via QR Code: ?evento=ID)              -->
+<!-- ===================================================================== -->
+<div id="view-aluno" hidden class="min-h-screen flex flex-col">
+  <header class="bg-ulbra-900 text-white">
+    <div class="max-w-lg mx-auto px-4 pt-5 pb-14">
+      <p class="text-xs uppercase tracking-[0.18em] text-ulbra-100/80">ILES/ULBRA Itumbiara</p>
+      <h1 class="text-lg font-semibold mt-1">Emissão de certificado</h1>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-lg w-full mx-auto px-4 -mt-10 pb-10">
+    <!-- carregando (healthcheck silencioso) -->
+    <section id="al-carregando" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+      <div class="skeleton h-4 w-1/3 rounded mb-3"></div>
+      <div class="skeleton h-6 w-5/6 rounded mb-2"></div>
+      <div class="skeleton h-4 w-1/2 rounded mb-6"></div>
+      <div class="skeleton h-11 w-full rounded-lg mb-3"></div>
+      <div class="skeleton h-11 w-full rounded-lg mb-3"></div>
+      <div class="skeleton h-11 w-full rounded-lg"></div>
+      <p class="text-xs text-slate-400 mt-4 text-center">Conectando ao sistema…</p>
+    </section>
+
+    <!-- aviso (indisponível / evento inválido / encerrado) -->
+    <section id="al-aviso" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+      <div id="al-aviso-icone" class="mx-auto w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mb-4">!</div>
+      <h2 id="al-aviso-titulo" class="text-lg font-semibold text-slate-900"></h2>
+      <p id="al-aviso-texto" class="text-sm text-slate-600 mt-2 leading-relaxed"></p>
+      <button id="al-aviso-retry" class="mt-6 w-full h-11 rounded-lg bg-ulbra-900 text-white font-medium active:scale-[.99]">Tentar novamente</button>
+    </section>
+
+    <!-- formulário -->
+    <section id="al-form-wrap" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-100">
+        <p class="text-xs font-medium text-ulbra-600 uppercase tracking-wide">Evento</p>
+        <h2 id="al-ev-titulo" class="text-lg font-semibold text-slate-900 leading-snug mt-1"></h2>
+        <p id="al-ev-meta" class="text-sm text-slate-500 mt-1"></p>
+        <p id="al-aviso-fila" hidden class="mt-3 text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-2.5">
+          Alto volume de envios hoje: sua presença será registrada normalmente e o certificado pode levar algumas horas para chegar.
+        </p>
+        <p id="al-ja-emitido" hidden class="mt-3 text-xs bg-ulbra-50 text-ulbra-800 border border-ulbra-100 rounded-lg p-2.5"></p>
+      </div>
+
+      <form id="al-form" class="p-5 space-y-4" novalidate>
+        <div>
+          <label for="f-nome" class="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+          <input id="f-nome" type="text" autocomplete="name" autocapitalize="words" maxlength="120"
+                 class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="Como deve aparecer no certificado">
+          <p class="erro text-xs text-red-600 mt-1" data-for="f-nome" hidden></p>
+        </div>
+
+        <div>
+          <label for="f-email" class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+          <input id="f-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="120"
+                 class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="seu.email@exemplo.com">
+          <p class="erro text-xs text-red-600 mt-1" data-for="f-email" hidden></p>
+          <p class="text-xs text-slate-400 mt-1">O certificado em PDF será enviado para este endereço.</p>
+        </div>
+
+        <div>
+          <label for="f-curso" class="block text-sm font-medium text-slate-700 mb-1">Curso</label>
+          <select id="f-curso" class="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100">
+            <option value="">Selecione…</option>
+          </select>
+          <p class="erro text-xs text-red-600 mt-1" data-for="f-curso" hidden></p>
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium text-slate-700 mb-1">Selfie no evento</span>
+          <div id="selfie-vazio" class="rounded-xl border-2 border-dashed border-slate-300 p-4 text-center">
+            <p class="text-sm text-slate-500 mb-3">Tire uma foto no local do evento para comprovar sua presença.</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btn-camera" class="h-11 rounded-lg bg-ulbra-900 text-white text-sm font-medium">📷 Abrir câmera</button>
+              <button type="button" id="btn-galeria" class="h-11 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium">Escolher foto</button>
+            </div>
+          </div>
+          <div id="selfie-cheio" hidden class="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+            <img id="selfie-img" alt="Pré-visualização da selfie" class="w-20 h-20 rounded-lg object-cover bg-slate-100">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-emerald-700">Selfie pronta</p>
+              <p id="selfie-info" class="text-xs text-slate-500"></p>
+              <button type="button" id="btn-refazer" class="text-sm text-ulbra-600 font-medium mt-1">Trocar foto</button>
+            </div>
+          </div>
+          <input id="inp-camera" type="file" accept="image/*" capture="user" hidden>
+          <input id="inp-galeria" type="file" accept="image/*" hidden>
+          <p class="erro text-xs text-red-600 mt-1" data-for="selfie" hidden></p>
+        </div>
+
+        <label class="flex items-start gap-2.5 text-sm text-slate-600">
+          <input id="f-consent" type="checkbox" class="mt-0.5 w-4 h-4 accent-[#0b2545]">
+          <span>Autorizo o uso da minha selfie exclusivamente para comprovação de presença neste evento.</span>
+        </label>
+        <p class="erro text-xs text-red-600 -mt-2" data-for="f-consent" hidden></p>
+
+        <div id="al-erro-geral" hidden class="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg p-3"></div>
+
+        <button id="btn-enviar" type="submit" class="w-full h-12 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
+          <span id="btn-enviar-txt">Emitir meu certificado</span>
+        </button>
+        <p class="text-[11px] text-slate-400 text-center">Um certificado por e-mail por evento.</p>
+      </form>
+    </section>
+
+    <!-- sucesso -->
+    <section id="al-sucesso" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+      <div class="mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2 id="al-sucesso-titulo" class="text-lg font-semibold text-slate-900">Tudo certo!</h2>
+      <p id="al-sucesso-texto" class="text-sm text-slate-600 mt-2 leading-relaxed"></p>
+      <p class="text-xs text-slate-400 mt-4">Não chegou em alguns minutos? Verifique as pastas Spam e Promoções.</p>
+    </section>
+  </main>
+
+  <footer class="text-center text-[11px] text-slate-400 pb-6">Instituto Luterano de Ensino Superior de Itumbiara – ILES/ULBRA</footer>
+</div>
+
+<!-- ===================================================================== -->
+<!--  MÓDULO DA ORGANIZAÇÃO – LOGIN                                        -->
+<!-- ===================================================================== -->
+<div id="view-login" hidden class="min-h-screen flex items-center justify-center p-4 bg-ulbra-900">
+  <form id="login-form" class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
+    <p class="text-xs uppercase tracking-[0.18em] text-ulbra-600">ILES/ULBRA Itumbiara</p>
+    <h1 class="text-xl font-semibold text-slate-900 mt-1">Área da Organização</h1>
+    <p class="text-sm text-slate-500 mb-5">Gerador de certificados de eventos acadêmicos</p>
+    <label class="block text-sm font-medium text-slate-700 mb-1" for="lg-user">Usuário</label>
+    <input id="lg-user" autocomplete="username" class="w-full h-11 px-3 rounded-lg border border-slate-300 mb-3 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100">
+    <label class="block text-sm font-medium text-slate-700 mb-1" for="lg-pass">Senha</label>
+    <input id="lg-pass" type="password" autocomplete="current-password" class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100">
+    <p id="lg-erro" hidden class="text-sm text-red-600 mt-3"></p>
+    <button id="lg-btn" class="mt-5 w-full h-11 rounded-lg bg-ulbra-900 text-white font-medium flex items-center justify-center gap-2">Entrar</button>
+    <p id="lg-config" hidden class="mt-4 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-2.5">
+      A URL do Web App ainda não foi configurada em <code>CONFIG.API_URL</code> no início do script deste arquivo.
+    </p>
+  </form>
+</div>
+
+<!-- ===================================================================== -->
+<!--  MÓDULO DA ORGANIZAÇÃO – PAINEL                                       -->
+<!-- ===================================================================== -->
+<div id="view-admin" hidden class="min-h-screen">
+  <header class="bg-ulbra-900 text-white">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center gap-3 justify-between">
+      <div>
+        <p class="text-[11px] uppercase tracking-[0.18em] text-ulbra-100/70">ILES/ULBRA Itumbiara</p>
+        <h1 class="text-lg font-semibold">Certificados de eventos</h1>
+      </div>
+      <button id="btn-sair" class="text-sm text-ulbra-100 hover:text-white">Sair</button>
+    </div>
+    <nav class="max-w-6xl mx-auto px-4">
+      <div class="inline-flex gap-1 bg-ulbra-800 p-1 rounded-t-xl">
+        <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="eventos">Eventos</button>
+        <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="diagnostico">Diagnóstico &amp; QR Code</button>
+        <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="auditoria">Auditoria</button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="aviso-senha" hidden class="bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+    <div class="max-w-6xl mx-auto px-4 py-2">A senha padrão ainda está em uso. Troque-a nas Propriedades do script (ADMIN_PASS) antes do evento.</div>
+  </div>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- ============ ABA EVENTOS ============ -->
+    <section id="tab-eventos" class="tab-painel" hidden>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Eventos</h2>
+          <p class="text-sm text-slate-500">Cadastre o evento, rode o diagnóstico e só então imprima o QR Code.</p>
+        </div>
+        <button id="btn-novo-evento" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">+ Novo evento</button>
+      </div>
+      <div id="lista-eventos" class="grid gap-3 md:grid-cols-2"></div>
+    </section>
+
+    <!-- ============ ABA DIAGNÓSTICO ============ -->
+    <section id="tab-diagnostico" class="tab-painel" hidden>
+      <div class="grid gap-6 lg:grid-cols-5">
+        <div class="lg:col-span-3 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 class="text-lg font-semibold text-slate-900">Diagnóstico pré-evento</h2>
+            <p class="text-sm text-slate-500 mb-4">Testa API, planilha, Drive, cota de e-mail, imagem de fundo, geração do PDF e envia um certificado de prova.</p>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1" for="dg-evento">Evento</label>
+                <select id="dg-evento" class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1" for="dg-destino">E-mail para o disparo de teste</label>
+                <input id="dg-destino" type="email" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
+              </div>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-slate-600 mt-3">
+              <input id="dg-com-teste" type="checkbox" checked class="w-4 h-4 accent-[#0b2545]"> Incluir disparo de teste (consome 1 envio da cota)
+            </label>
+            <button id="btn-diagnostico" class="mt-4 w-full sm:w-auto h-11 px-5 rounded-lg bg-ulbra-900 text-white font-medium flex items-center justify-center gap-2">
+              Executar Diagnóstico do Sistema
+            </button>
+          </div>
+
+          <div id="dg-status" class="rounded-2xl border p-5 bg-white border-slate-200">
+            <p class="text-sm text-slate-500">Nenhum diagnóstico executado nesta sessão.</p>
+          </div>
+
+          <ul id="dg-itens" class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 empty:hidden"></ul>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 lg:sticky lg:top-4">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-semibold text-slate-900">Central de QR Code</h2>
+              <label class="flex items-center gap-2 text-xs text-slate-600">
+                <input id="qr-abertas" type="checkbox" class="w-4 h-4 accent-emerald-600"> Emissões abertas
+              </label>
+            </div>
+            <div id="qr-bloqueado" class="rounded-xl bg-slate-50 border border-dashed border-slate-300 p-6 text-center">
+              <div class="mx-auto w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-xl mb-3">🔒</div>
+              <p class="text-sm font-medium text-slate-700">QR Code bloqueado</p>
+              <p id="qr-motivo" class="text-xs text-slate-500 mt-1">Selecione um evento e execute o diagnóstico completo, incluindo o disparo de teste.</p>
+            </div>
+            <div id="qr-liberado" hidden>
+              <div class="bg-white border border-slate-200 rounded-xl p-4 flex justify-center"><div id="qr-canvas"></div></div>
+              <div class="mt-3 flex gap-2">
+                <input id="qr-url" readonly class="flex-1 min-w-0 h-9 px-2 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600">
+                <button id="btn-copiar-url" class="h-9 px-3 rounded-lg border border-slate-300 text-xs font-medium">Copiar</button>
+              </div>
+              <p id="qr-aviso-url" hidden class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2"></p>
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                <button id="btn-baixar-qr" class="h-10 rounded-lg bg-ulbra-900 text-white text-sm font-medium">Baixar PNG</button>
+                <button id="btn-imprimir-qr" class="h-10 rounded-lg border border-slate-300 text-sm font-medium">Imprimir cartaz</button>
+              </div>
+              <p id="qr-aprovado-em" class="text-[11px] text-slate-400 mt-3"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ABA AUDITORIA ============ -->
+    <section id="tab-auditoria" class="tab-painel" hidden>
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div class="min-w-[240px]">
+          <label class="block text-xs font-medium text-slate-600 mb-1" for="au-evento">Evento</label>
+          <select id="au-evento" class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm"></select>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btn-au-atualizar" class="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-medium">Atualizar</button>
+          <button id="btn-au-reprocessar" class="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-medium">Reprocessar pendentes</button>
+          <button id="btn-au-csv" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">Exportar CSV</button>
+        </div>
+      </div>
+      <div id="au-resumo" class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4"></div>
+      <div class="mb-3">
+        <input id="au-busca" type="search" placeholder="Filtrar por nome, e-mail ou curso…" class="w-full sm:w-80 h-10 px-3 rounded-lg border border-slate-300 text-sm">
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3">Registro</th><th class="px-4 py-3">Participante</th><th class="px-4 py-3">Curso</th>
+              <th class="px-4 py-3">Status</th><th class="px-4 py-3">Selfie</th><th class="px-4 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="au-tabela" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===================== MODAL: EVENTO ===================== -->
+<div id="modal-evento" hidden class="fixed inset-0 z-40 bg-slate-900/50 overflow-y-auto">
+  <div class="min-h-full flex items-start justify-center p-4">
+    <form id="form-evento" class="w-full max-w-4xl bg-white rounded-2xl shadow-xl my-6" novalidate>
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="me-titulo" class="text-lg font-semibold text-slate-900">Novo evento</h3>
+        <button type="button" class="fechar-modal text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Fechar">×</button>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6 p-6">
+        <div class="space-y-3">
+          <input type="hidden" id="ev-id">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" for="ev-titulo">Título do evento</label>
+            <input id="ev-titulo" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" maxlength="200">
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-1">
+              <label class="block text-xs font-medium text-slate-600 mb-1" for="ev-data">Data</label>
+              <input id="ev-data" type="date" class="w-full h-10 px-2 rounded-lg border border-slate-300 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1" for="ev-ch">Carga horária (h)</label>
+              <input id="ev-ch" type="number" min="0.5" step="0.5" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1" for="ev-publico">Público estimado</label>
+              <input id="ev-publico" type="number" min="0" step="1" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" placeholder="opcional">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" for="ev-fundo">URL da imagem de fundo (PNG/JPG, A4 paisagem)</label>
+            <input id="ev-fundo" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" placeholder="https://…/assets/fundo-certificado.png">
+            <p class="text-[11px] text-slate-400 mt-1">Aceita link público (GitHub Pages) ou link de arquivo do Google Drive da conta do script.</p>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-slate-600" for="ev-dizeres">Dizeres do certificado</label>
+              <span class="text-[11px] text-slate-400">**texto** = negrito</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mb-2" id="ev-tags">
+              <button type="button" data-tag="{nome}" class="px-2 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-mono">{nome}</button>
+              <button type="button" data-tag="{curso}" class="px-2 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-mono">{curso}</button>
+              <button type="button" data-tag="{evento}" class="px-2 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-mono">{evento}</button>
+              <button type="button" data-tag="{data}" class="px-2 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-mono">{data}</button>
+              <button type="button" data-tag="{carga_horaria}" class="px-2 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-mono">{carga_horaria}</button>
+            </div>
+            <textarea id="ev-dizeres" rows="7" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm leading-relaxed"></textarea>
+          </div>
+          <p id="ev-erro" hidden class="text-sm text-red-600"></p>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium text-slate-600 mb-1">Pré-visualização rápida (aproximada)</p>
+          <div id="ev-preview" class="cert-preview relative w-full rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <div class="corpo" id="ev-preview-corpo"></div>
+            <div class="data" id="ev-preview-data"></div>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">O PDF final é gerado no Google (modelo Slides A4 paisagem). Use "Salvar e gerar PDF de prova" para conferir o arquivo real antes do diagnóstico.</p>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-slate-100 flex flex-wrap justify-end gap-2">
+        <button type="button" class="fechar-modal h-10 px-4 rounded-lg border border-slate-300 text-sm font-medium">Cancelar</button>
+        <button type="button" id="btn-ev-preview-pdf" class="h-10 px-4 rounded-lg border border-ulbra-600 text-ulbra-700 text-sm font-medium flex items-center gap-2">Salvar e gerar PDF de prova</button>
+        <button type="submit" id="btn-ev-salvar" class="h-10 px-5 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Salvar evento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: VISUALIZADOR ===================== -->
+<div id="modal-visual" hidden class="fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] flex flex-col">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+      <h3 id="mv-titulo" class="font-semibold text-slate-900 truncate"></h3>
+      <div class="flex items-center gap-3">
+        <a id="mv-download" class="text-sm text-ulbra-600 font-medium" download>Baixar</a>
+        <button id="mv-fechar" class="text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Fechar">×</button>
+      </div>
+    </div>
+    <div id="mv-corpo" class="flex-1 overflow-auto p-3 bg-slate-100 flex items-center justify-center min-h-[300px]"></div>
+  </div>
+</div>
+
+<!-- toast -->
+<div id="toast" hidden class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-[calc(100%-2rem)] rounded-xl px-4 py-3 text-sm shadow-lg"></div>
+
+<script>
+/* ==========================================================================
+   CONFIGURAÇÃO – ajuste apenas este bloco
+   ========================================================================== */
+const CONFIG = {
+  // URL do Web App publicado no Apps Script (termina em /exec)
+  API_URL: 'COLE_AQUI_A_URL_DO_WEB_APP',
+  // Deixe vazio para usar o endereço desta página (GitHub Pages) no QR Code
+  BASE_URL: '',
+  DOMINIOS: [],   // vazio = aceita qualquer e-mail; ex.: ['ulbra.edu.br'] restringe ao domínio
+  CURSOS: ['Administração', 'Agronomia', 'Biomedicina', 'Ciências Contábeis', 'Direito', 'Engenharia Civil',
+           'Engenharia de Produção', 'Engenharia de Software', 'Psicologia', 'Sistemas de Informação', 'Veterinária'],
+  SELFIE_MAX_LADO: 1024,
+  SELFIE_QUALIDADE: 0.72,
+  TIMEOUT_HEALTH_MS: 15000,
+  TIMEOUT_ENVIO_MS: 120000,
+  TIMEOUT_ADMIN_MS: 180000,
+  DIZERES_PADRAO: 'Certificamos que **{nome}** participou, como ouvinte, do evento intitulado **“{evento}”**, promovido pelo curso de Bacharelado em Direito do Instituto Luterano de Ensino Superior de Itumbiara – ILES/ULBRA, realizado no dia {data}, com carga horária total de **{carga_horaria}** horas.',
+  CIDADE: 'Itumbiara'
+};
+
+/* ==========================================================================
+   UTILITÁRIOS
+   ========================================================================== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function dataExtenso(iso, capitalizar) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return String(iso || '');
+  let mes = MESES[+m[2] - 1] || '';
+  if (capitalizar) mes = mes.charAt(0).toUpperCase() + mes.slice(1);
+  return `${+m[3]} de ${mes} de ${m[1]}`;
+}
+function formatarCH(ch) {
+  const n = parseFloat(String(ch ?? '').replace(',', '.'));
+  return isNaN(n) ? String(ch ?? '') : String(Math.round(n * 10) / 10).replace('.', ',');
+}
+function dataHora(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? String(iso) : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function emailValido(email) {
+  const m = /^[a-z0-9._%+-]+@((?:[a-z0-9-]+\.)+[a-z]{2,})$/.exec(email);
+  return !!m && (CONFIG.DOMINIOS.length === 0 || CONFIG.DOMINIOS.includes(m[1]));
+}
+function toast(msg, tipo = 'info', ms = 4000) {
+  const t = $('toast');
+  const cores = { info: 'bg-slate-900 text-white', ok: 'bg-emerald-600 text-white', erro: 'bg-red-600 text-white', alerta: 'bg-amber-500 text-slate-900' };
+  t.className = `fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-[calc(100%-2rem)] rounded-xl px-4 py-3 text-sm shadow-lg ${cores[tipo] || cores.info}`;
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.hidden = true; }, ms);
+}
+const SPIN = '<svg class="spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity=".25" stroke-width="4"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>';
+function carregando(btn, ativo, texto) {
+  if (ativo) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = SPIN + (texto ? `<span>${esc(texto)}</span>` : ''); }
+  else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
+}
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  sget(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
+  sset(k, v) { try { sessionStorage.setItem(k, v); } catch {} },
+  sdel(k) { try { sessionStorage.removeItem(k); } catch {} }
+};
+
+/* ==========================================================================
+   CLIENTE DA API (Apps Script)
+   POST com text/plain evita o preflight CORS que o Apps Script não atende.
+   ========================================================================== */
+class ApiError extends Error { constructor(msg, codigo) { super(msg); this.codigo = codigo || 'ERRO'; } }
+
+function apiConfigurada() { return /^https:\/\/script\.google(usercontent)?\.com\//.test(CONFIG.API_URL); }
+
+async function fetchComTimeout(url, opcoes, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opcoes, signal: ctrl.signal, redirect: 'follow' });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new ApiError('O servidor demorou demais para responder.', 'TIMEOUT');
+    throw new ApiError('Falha de conexão com o servidor.', 'REDE');
+  } finally { clearTimeout(t); }
+}
+async function lerResposta(r) {
+  const txt = await r.text();
+  let dados;
+  try { dados = JSON.parse(txt); }
+  catch { throw new ApiError('Resposta inesperada do servidor (o Web App está publicado para "Qualquer pessoa"?).', 'FORMATO'); }
+  if (!dados.ok) throw new ApiError(dados.erro || 'Erro desconhecido.', dados.codigo);
+  return dados;
+}
+async function apiGet(params, ms = 20000) {
+  if (!apiConfigurada()) throw new ApiError('URL da API não configurada.', 'CONFIG');
+  const url = CONFIG.API_URL + '?' + new URLSearchParams({ ...params, _: Date.now() });
+  return lerResposta(await fetchComTimeout(url, { method: 'GET' }, ms));
+}
+async function apiPost(corpo, ms = 60000) {
+  if (!apiConfigurada()) throw new ApiError('URL da API não configurada.', 'CONFIG');
+  return lerResposta(await fetchComTimeout(CONFIG.API_URL, {
+    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo)
+  }, ms));
+}
+
+/* ==========================================================================
+   ROTEAMENTO
+   ========================================================================== */
+const params = new URLSearchParams(location.search);
+const EVENTO_ID = (params.get('evento') || '').trim().toUpperCase();
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (EVENTO_ID) Aluno.iniciar();
+  else Admin.iniciar();
+});
+
+/* ==========================================================================
+   MÓDULO DO PARTICIPANTE
+   ========================================================================== */
+const Aluno = {
+  selfie: null,
+  evento: null,
+
+  iniciar() {
+    $('view-aluno').hidden = false;
+    const sel = $('f-curso');
+    CONFIG.CURSOS.forEach((c) => sel.insertAdjacentHTML('beforeend', `<option>${esc(c)}</option>`));
+
+    $('btn-camera').onclick = () => $('inp-camera').click();
+    $('btn-galeria').onclick = () => $('inp-galeria').click();
+    $('btn-refazer').onclick = () => $('inp-camera').click();
+    $('inp-camera').onchange = (e) => this.processarFoto(e.target);
+    $('inp-galeria').onchange = (e) => this.processarFoto(e.target);
+    $('al-form').onsubmit = (e) => { e.preventDefault(); this.enviar(); };
+    $('al-aviso-retry').onclick = () => this.verificar();
+    $('f-email').addEventListener('blur', () => this.validarCampo('f-email'));
+    $('f-email').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\s/g, '').toLowerCase(); this.limparErro('f-email'); });
+    $('f-nome').addEventListener('blur', () => this.validarCampo('f-nome'));
+    ['f-nome', 'f-curso', 'f-consent'].forEach((id) => $(id).addEventListener('input', () => this.limparErro(id)));
+
+    this.verificar();
+  },
+
+  mostrar(secao) {
+    ['al-carregando', 'al-aviso', 'al-form-wrap', 'al-sucesso'].forEach((s) => { $(s).hidden = s !== secao; });
+    window.scrollTo({ top: 0 });
+  },
+
+  aviso(titulo, texto, { retry = true, icone = '!', cor = 'amber' } = {}) {
+    $('al-aviso-titulo').textContent = titulo;
+    $('al-aviso-texto').textContent = texto;
+    $('al-aviso-retry').hidden = !retry;
+    const ic = $('al-aviso-icone');
+    ic.textContent = icone;
+    ic.className = `mx-auto w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-4 ${cor === 'red' ? 'bg-red-100 text-red-600' : cor === 'slate' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-600'}`;
+    this.mostrar('al-aviso');
+  },
+
+  /** Healthcheck silencioso: só incomoda o aluno se houver problema. */
+  async verificar() {
+    this.mostrar('al-carregando');
+    if (!apiConfigurada()) {
+      return this.aviso('Sistema em configuração', 'A emissão de certificados ainda não foi ativada pela organização. Procure a equipe do evento.', { retry: false });
+    }
+    let hc = null;
+    for (let tentativa = 1; tentativa <= 2 && !hc; tentativa++) {
+      try { hc = await apiGet({ action: 'healthCheck', evento: EVENTO_ID }, CONFIG.TIMEOUT_HEALTH_MS); }
+      catch (e) {
+        if (tentativa === 2) {
+          return this.aviso('Serviço temporariamente indisponível',
+            'Não conseguimos falar com o sistema do Google agora (rede instável ou manutenção). Seus dados não foram perdidos porque ainda não foram enviados: aguarde um instante e toque em "Tentar novamente".');
+        }
+        await new Promise((r) => setTimeout(r, 1500)); // segunda chance (cold start do Apps Script)
+      }
+    }
+    if (!hc.evento) {
+      return this.aviso('Evento não encontrado', 'Este QR Code não corresponde a nenhum evento ativo. Confira com a organização.', { retry: false, icone: '?', cor: 'slate' });
+    }
+    if (!hc.evento.aberto) {
+      return this.aviso('Emissões encerradas', `A emissão de certificados para "${hc.evento.titulo}" foi encerrada pela organização.`, { retry: false, icone: '⏱', cor: 'slate' });
+    }
+    this.evento = hc.evento;
+    $('al-ev-titulo').textContent = hc.evento.titulo;
+    $('al-ev-meta').textContent = `${hc.evento.dataExtenso} · ${hc.evento.cargaHoraria} h`;
+    document.title = `Certificado – ${hc.evento.titulo}`;
+    $('al-aviso-fila').hidden = hc.emailImediato !== false;
+    const ja = store.get('cert_' + EVENTO_ID);
+    if (ja) { $('al-ja-emitido').textContent = `Este aparelho já emitiu um certificado deste evento para ${ja}. Outra pessoa pode usar o formulário normalmente.`; $('al-ja-emitido').hidden = false; }
+    this.mostrar('al-form-wrap');
+  },
+
+  erro(campo, msg) {
+    const el = document.querySelector(`.erro[data-for="${campo}"]`);
+    if (el) { el.textContent = msg; el.hidden = false; }
+    const inp = $(campo);
+    if (inp && inp.classList) inp.classList.add('border-red-400');
+  },
+  limparErro(campo) {
+    const el = document.querySelector(`.erro[data-for="${campo}"]`);
+    if (el) el.hidden = true;
+    const inp = $(campo);
+    if (inp && inp.classList) inp.classList.remove('border-red-400');
+  },
+
+  validarCampo(id) {
+    this.limparErro(id);
+    if (id === 'f-nome') {
+      const v = $('f-nome').value.trim().replace(/\s+/g, ' ');
+      if (v.length < 5 || !v.includes(' ')) return this.erro(id, 'Informe nome e sobrenome, como devem sair no certificado.'), false;
+      if (/[0-9@]/.test(v)) return this.erro(id, 'O nome não deve conter números ou "@".'), false;
+    }
+    if (id === 'f-email') {
+      const v = $('f-email').value.trim().toLowerCase();
+      if (!v) return this.erro(id, 'Informe seu e-mail.'), false;
+      if (!emailValido(v)) return this.erro(id, CONFIG.DOMINIOS.length ? `Use apenas o e-mail institucional @${CONFIG.DOMINIOS.join(' ou @')}.` : 'Confira o e-mail: o formato parece inválido.'), false;
+    }
+    if (id === 'f-curso' && !$('f-curso').value) return this.erro(id, 'Selecione seu curso.'), false;
+    if (id === 'f-consent' && !$('f-consent').checked) return this.erro(id, 'Marque a autorização para continuar.'), false;
+    return true;
+  },
+
+  async processarFoto(input) {
+    const arq = input.files && input.files[0];
+    input.value = '';
+    if (!arq) return;
+    this.limparErro('selfie');
+    if (!arq.type.startsWith('image/')) return this.erro('selfie', 'Selecione um arquivo de imagem.');
+    try {
+      const { dataUrl, largura, altura } = await comprimirImagem(arq, CONFIG.SELFIE_MAX_LADO, CONFIG.SELFIE_QUALIDADE);
+      this.selfie = dataUrl;
+      $('selfie-img').src = dataUrl;
+      const kb = Math.round((dataUrl.length * 3) / 4 / 1024);
+      $('selfie-info').textContent = `${largura}×${altura}px · ${kb} KB (comprimida)`;
+      $('selfie-vazio').hidden = true;
+      $('selfie-cheio').hidden = false;
+    } catch (e) {
+      this.erro('selfie', 'Não foi possível ler esta foto. Tente tirar outra.');
+    }
+  },
+
+  async enviar() {
+    $('al-erro-geral').hidden = true;
+    const campos = ['f-nome', 'f-email', 'f-curso'];
+    let ok = campos.map((c) => this.validarCampo(c)).every(Boolean);
+    if (!this.selfie) { this.erro('selfie', 'Tire ou selecione a selfie no evento.'); ok = false; }
+    if (!this.validarCampo('f-consent')) ok = false;
+    if (!ok) { document.querySelector('.erro:not([hidden])')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+
+    const btn = $('btn-enviar');
+    const etapas = ['Enviando selfie…', 'Registrando presença…', 'Gerando seu certificado…', 'Enviando por e-mail…', 'Quase lá…'];
+    let i = 0;
+    carregando(btn, true, etapas[0]);
+    const timer = setInterval(() => { i = Math.min(i + 1, etapas.length - 1); btn.querySelector('span').textContent = etapas[i]; }, 3500);
+
+    try {
+      const r = await apiPost({
+        action: 'submitAttendance',
+        eventoId: EVENTO_ID,
+        dados: {
+          nome: $('f-nome').value.trim().replace(/\s+/g, ' '),
+          email: $('f-email').value.trim().toLowerCase(),
+          curso: $('f-curso').value,
+          selfie: this.selfie,
+          consentimento: $('f-consent').checked
+        }
+      }, CONFIG.TIMEOUT_ENVIO_MS);
+      store.set('cert_' + EVENTO_ID, r.email);
+      $('al-sucesso-titulo').textContent = r.duplicado ? 'Presença já registrada' : (r.enviado ? 'Certificado enviado!' : 'Presença registrada!');
+      $('al-sucesso-texto').textContent = r.mensagem;
+      this.mostrar('al-sucesso');
+    } catch (e) {
+      const geral = $('al-erro-geral');
+      if (e.codigo === 'TIMEOUT' || e.codigo === 'REDE') {
+        geral.textContent = 'Não recebemos a confirmação do servidor. Toque em "Emitir meu certificado" novamente: se o registro já tiver sido feito, o sistema reconhece e não duplica.';
+      } else if (e.codigo === 'FECHADO' || e.codigo === 'EVENTO') {
+        return this.aviso('Emissão indisponível', e.message, { retry: false, icone: '⏱', cor: 'slate' });
+      } else {
+        geral.textContent = e.message;
+      }
+      geral.hidden = false;
+      geral.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } finally {
+      clearInterval(timer);
+      carregando(btn, false);
+    }
+  }
+};
+
+/** Redimensiona e comprime a imagem no navegador (JPEG em Base64). */
+function comprimirImagem(arquivo, maxLado, qualidade) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(arquivo);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const escala = Math.min(1, maxLado / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * escala), h = Math.round(img.naturalHeight * escala);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let q = qualidade, dataUrl = cv.toDataURL('image/jpeg', q);
+        while (dataUrl.length > 1.6 * 1024 * 1024 && q > 0.35) { q -= 0.1; dataUrl = cv.toDataURL('image/jpeg', q); }
+        resolve({ dataUrl, largura: w, altura: h });
+      } catch (e) { reject(e); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagem inválida')); };
+    img.src = url;
+  });
+}
+
+/* ==========================================================================
+   MÓDULO DA ORGANIZAÇÃO
+   ========================================================================== */
+const Admin = {
+  token: null,
+  eventos: [],
+  emailOrganizador: '',
+  participantes: [],
+
+  iniciar() {
+    this.token = store.sget('adm_token');
+    this.emailOrganizador = store.sget('adm_email') || '';
+    if (this.token) this.abrirPainel();
+    else this.mostrarLogin();
+  },
+
+  /* ---------- sessão ---------- */
+  mostrarLogin() {
+    $('view-admin').hidden = true;
+    $('view-login').hidden = false;
+    $('lg-config').hidden = apiConfigurada();
+    $('login-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = $('lg-btn');
+      $('lg-erro').hidden = true;
+      carregando(btn, true, 'Entrando…');
+      try {
+        const r = await apiPost({ action: 'login', usuario: $('lg-user').value, senha: $('lg-pass').value }, 30000);
+        this.token = r.token;
+        this.emailOrganizador = r.emailOrganizador || '';
+        store.sset('adm_token', r.token);
+        store.sset('adm_email', this.emailOrganizador);
+        store.sset('adm_senha_padrao', r.senhaPadrao ? '1' : '');
+        $('lg-pass').value = '';
+        this.abrirPainel();
+      } catch (err) {
+        $('lg-erro').textContent = err.message;
+        $('lg-erro').hidden = false;
+      } finally { carregando(btn, false); }
+    };
+  },
+
+  async sair() {
+    try { await apiPost({ action: 'logout', token: this.token }, 10000); } catch {}
+    store.sdel('adm_token');
+    this.token = null;
+    this.mostrarLogin();
+  },
+
+  async api(corpo, ms = CONFIG.TIMEOUT_ADMIN_MS) {
+    try {
+      return await apiPost({ ...corpo, token: this.token }, ms);
+    } catch (e) {
+      if (e.codigo === 'AUTH') { toast('Sessão expirada. Entre novamente.', 'alerta'); store.sdel('adm_token'); this.mostrarLogin(); }
+      throw e;
+    }
+  },
+
+  /* ---------- painel ---------- */
+  abrirPainel() {
+    $('view-login').hidden = true;
+    $('view-admin').hidden = false;
+    $('aviso-senha').hidden = store.sget('adm_senha_padrao') !== '1';
+    $('btn-sair').onclick = () => this.sair();
+    document.querySelectorAll('.tab').forEach((b) => { b.onclick = () => this.aba(b.dataset.tab); });
+
+    $('btn-novo-evento').onclick = () => this.abrirFormEvento();
+    document.querySelectorAll('.fechar-modal').forEach((b) => { b.onclick = () => { $('modal-evento').hidden = true; }; });
+    $('form-evento').onsubmit = (e) => { e.preventDefault(); this.salvarEvento(false); };
+    $('btn-ev-preview-pdf').onclick = () => this.salvarEvento(true);
+    ['ev-titulo', 'ev-data', 'ev-ch', 'ev-fundo', 'ev-dizeres'].forEach((id) => $(id).addEventListener('input', () => this.atualizarPreview()));
+    document.querySelectorAll('#ev-tags button').forEach((b) => { b.onclick = () => this.inserirTag(b.dataset.tag); });
+
+    $('btn-diagnostico').onclick = () => this.executarDiagnostico();
+    $('dg-evento').onchange = () => { this.limparDiagnostico(); this.renderQR(); };
+    $('qr-abertas').onchange = (e) => this.alternarInscricoes(e.target.checked);
+    $('btn-copiar-url').onclick = () => { navigator.clipboard?.writeText($('qr-url').value).then(() => toast('Link copiado.', 'ok')); };
+    $('btn-baixar-qr').onclick = () => this.baixarQR();
+    $('btn-imprimir-qr').onclick = () => this.imprimirQR();
+
+    $('au-evento').onchange = () => this.carregarParticipantes();
+    $('btn-au-atualizar').onclick = () => this.carregarParticipantes();
+    $('btn-au-reprocessar').onclick = () => this.reprocessar();
+    $('btn-au-csv').onclick = () => this.exportarCSV();
+    $('au-busca').oninput = () => this.renderParticipantes();
+
+    $('mv-fechar').onclick = () => this.fecharVisualizador();
+    $('modal-visual').onclick = (e) => { if (e.target.id === 'modal-visual') this.fecharVisualizador(); };
+
+    $('dg-destino').value = this.emailOrganizador;
+    this.aba('eventos');
+    this.carregarEventos();
+  },
+
+  aba(nome) {
+    document.querySelectorAll('.tab').forEach((b) => {
+      const ativa = b.dataset.tab === nome;
+      b.classList.toggle('tab-ativa', ativa);
+      b.classList.toggle('text-ulbra-100', !ativa);
+    });
+    document.querySelectorAll('.tab-painel').forEach((p) => { p.hidden = p.id !== 'tab-' + nome; });
+    if (nome === 'auditoria') this.carregarParticipantes();
+    if (nome === 'diagnostico') this.renderQR();
+  },
+
+  /* ---------- eventos ---------- */
+  async carregarEventos(manterSelecao = true) {
+    const lista = $('lista-eventos');
+    if (!this.eventos.length) lista.innerHTML = '<div class="skeleton h-32 rounded-2xl"></div><div class="skeleton h-32 rounded-2xl"></div>';
+    try {
+      const r = await this.api({ action: 'listarEventos' }, 60000);
+      this.eventos = r.eventos;
+      if (r.emailOrganizador && !$('dg-destino').value) $('dg-destino').value = r.emailOrganizador;
+      this.renderEventos();
+      this.preencherSelects(manterSelecao);
+      this.renderQR();
+    } catch (e) {
+      lista.innerHTML = `<div class="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">${esc(e.message)}</div>`;
+    }
+  },
+
+  renderEventos() {
+    const lista = $('lista-eventos');
+    if (!this.eventos.length) {
+      lista.innerHTML = '<div class="md:col-span-2 bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-sm text-slate-500">Nenhum evento cadastrado. Clique em <b>+ Novo evento</b>.</div>';
+      return;
+    }
+    lista.innerHTML = this.eventos.map((ev) => {
+      const selo = ev.aprovado
+        ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">Pronto para o evento</span>'
+        : '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">Diagnóstico pendente</span>';
+      const aberto = ev.inscricoes_abertas
+        ? '<span class="text-xs text-emerald-700">● emissões abertas</span>'
+        : '<span class="text-xs text-slate-500">● emissões fechadas</span>';
+      return `<article class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col">
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="font-semibold text-slate-900 leading-snug">${esc(ev.titulo)}</h3>${selo}
+        </div>
+        <p class="text-sm text-slate-500 mt-1">${esc(dataExtenso(ev.data))} · ${esc(formatarCH(ev.carga_horaria))} h · ID <span class="font-mono">${esc(ev.id)}</span></p>
+        <div class="flex items-center gap-3 mt-2 text-sm text-slate-600">${aberto}<span class="text-xs">${ev.participantes} participante(s)</span></div>
+        <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100">
+          <button data-acao="editar" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Editar</button>
+          <button data-acao="diag" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-sm">Diagnóstico &amp; QR</button>
+          <button data-acao="audit" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Auditoria</button>
+        </div>
+      </article>`;
+    }).join('');
+    lista.querySelectorAll('button[data-acao]').forEach((b) => {
+      b.onclick = () => {
+        const ev = this.eventos.find((x) => x.id === b.dataset.id);
+        if (b.dataset.acao === 'editar') this.abrirFormEvento(ev);
+        if (b.dataset.acao === 'diag') { $('dg-evento').value = ev.id; this.limparDiagnostico(); this.aba('diagnostico'); }
+        if (b.dataset.acao === 'audit') { $('au-evento').value = ev.id; this.aba('auditoria'); }
+      };
+    });
+  },
+
+  preencherSelects(manter) {
+    ['dg-evento', 'au-evento'].forEach((id) => {
+      const sel = $(id);
+      const atual = sel.value;
+      sel.innerHTML = this.eventos.length
+        ? this.eventos.map((ev) => `<option value="${esc(ev.id)}">${esc(ev.data)} – ${esc(ev.titulo)}</option>`).join('')
+        : '<option value="">Nenhum evento</option>';
+      if (manter && atual && this.eventos.some((e) => e.id === atual)) sel.value = atual;
+    });
+  },
+
+  eventoSelecionado(selId = 'dg-evento') { return this.eventos.find((e) => e.id === $(selId).value); },
+
+  urlFundoPadrao() {
+    const base = CONFIG.BASE_URL || (location.origin + location.pathname.replace(/[^/]*$/, ''));
+    return /^https:/.test(base) ? base.replace(/\/?$/, '/') + 'assets/fundo-certificado.png' : '';
+  },
+
+  abrirFormEvento(ev) {
+    $('me-titulo').textContent = ev ? 'Editar evento' : 'Novo evento';
+    $('ev-id').value = ev ? ev.id : '';
+    $('ev-titulo').value = ev ? ev.titulo : '';
+    $('ev-data').value = ev ? ev.data : new Date().toISOString().slice(0, 10);
+    $('ev-ch').value = ev ? String(ev.carga_horaria).replace(',', '.') : '';
+    $('ev-publico').value = ev && ev.publico_estimado ? ev.publico_estimado : '';
+    $('ev-fundo').value = ev ? ev.fundo_url : this.urlFundoPadrao();
+    $('ev-dizeres').value = ev ? ev.dizeres : CONFIG.DIZERES_PADRAO;
+    $('ev-erro').hidden = true;
+    $('modal-evento').hidden = false;
+    this.atualizarPreview();
+    $('ev-titulo').focus();
+  },
+
+  inserirTag(tag) {
+    const ta = $('ev-dizeres');
+    const [i, f] = [ta.selectionStart, ta.selectionEnd];
+    ta.value = ta.value.slice(0, i) + tag + ta.value.slice(f);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = i + tag.length;
+    this.atualizarPreview();
+  },
+
+  atualizarPreview() {
+    const fundo = $('ev-fundo').value.trim();
+    $('ev-preview').style.backgroundImage = fundo ? `url("${fundo.replace(/"/g, '')}")` : 'none';
+    const titulo = $('ev-titulo').value.trim() || 'Título do evento';
+    const data = $('ev-data').value;
+    const valores = { '{nome}': 'Maria Aparecida de Souza Exemplo', '{curso}': 'Direito', '{evento}': titulo, '{data}': dataExtenso(data), '{carga_horaria}': formatarCH($('ev-ch').value || '0') };
+    const html = $('ev-dizeres').value.split('**').map((seg, i) => {
+      let t = esc(seg);
+      Object.entries(valores).forEach(([k, v]) => { t = t.split(k).join(esc(v)); });
+      return i % 2 ? `<b>${t}</b>` : t;
+    }).join('').replace(/\n/g, '<br>');
+    $('ev-preview-corpo').innerHTML = html;
+    $('ev-preview-data').textContent = data ? `${CONFIG.CIDADE}, ${dataExtenso(data, true)}.` : '';
+  },
+
+  async salvarEvento(gerarPdf) {
+    const erro = $('ev-erro');
+    erro.hidden = true;
+    const evento = {
+      id: $('ev-id').value || undefined,
+      titulo: $('ev-titulo').value.trim(),
+      data: $('ev-data').value,
+      carga_horaria: $('ev-ch').value,
+      publico_estimado: $('ev-publico').value,
+      fundo_url: $('ev-fundo').value.trim(),
+      dizeres: $('ev-dizeres').value.trim()
+    };
+    const falha = !evento.titulo ? 'Informe o título.' : !evento.data ? 'Informe a data.' : !(parseFloat(evento.carga_horaria) > 0) ? 'Informe a carga horária.'
+      : !evento.dizeres.includes('{nome}') ? 'Os dizeres precisam conter a tag {nome}.' : !/^https:\/\//.test(evento.fundo_url) ? 'A URL da imagem de fundo deve começar com https://' : '';
+    if (falha) { erro.textContent = falha; erro.hidden = false; return; }
+
+    const btn = gerarPdf ? $('btn-ev-preview-pdf') : $('btn-ev-salvar');
+    carregando(btn, true, gerarPdf ? 'Gerando PDF…' : 'Salvando…');
+    try {
+      const r = await this.api({ action: 'salvarEvento', evento });
+      $('ev-id').value = r.evento.id;
+      toast(r.aviso || 'Evento salvo.', r.aviso ? 'alerta' : 'ok', 5000);
+      await this.carregarEventos();
+      if (gerarPdf) {
+        const p = await this.api({ action: 'previewCertificado', eventoId: r.evento.id });
+        this.abrirPdf(p.pdfBase64, p.nome);
+      } else {
+        $('modal-evento').hidden = true;
+      }
+    } catch (e) {
+      erro.textContent = e.message;
+      erro.hidden = false;
+    } finally { carregando(btn, false); }
+  },
+
+  /* ---------- diagnóstico ---------- */
+  limparDiagnostico() {
+    $('dg-itens').innerHTML = '';
+    $('dg-status').className = 'rounded-2xl border p-5 bg-white border-slate-200';
+    $('dg-status').innerHTML = '<p class="text-sm text-slate-500">Nenhum diagnóstico executado nesta sessão para este evento.</p>';
+  },
+
+  itemDiag({ nome, nivel, detalhe }) {
+    const ic = {
+      ok: '<span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">✓</span>',
+      alerta: '<span class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">!</span>',
+      erro: '<span class="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">✕</span>',
+      rodando: `<span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">${SPIN}</span>`
+    }[nivel];
+    return `<li class="flex items-start gap-3 px-4 py-3"><div class="shrink-0 mt-0.5">${ic}</div>
+      <div class="min-w-0"><p class="text-sm font-medium text-slate-800">${esc(nome)}</p><p class="text-xs text-slate-500 mt-0.5 break-words">${esc(detalhe || '')}</p></div></li>`;
+  },
+
+  async executarDiagnostico() {
+    const ev = this.eventoSelecionado();
+    if (!ev) return toast('Cadastre e selecione um evento.', 'alerta');
+    const comTeste = $('dg-com-teste').checked;
+    const destino = $('dg-destino').value.trim();
+    if (comTeste && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destino)) return toast('Informe um e-mail válido para o disparo de teste.', 'alerta');
+
+    const btn = $('btn-diagnostico');
+    carregando(btn, true, 'Executando bateria de testes…');
+    const itens = [];
+    const lista = $('dg-itens');
+    const render = (rodando) => { lista.innerHTML = itens.map((i) => this.itemDiag(i)).join('') + (rodando ? this.itemDiag({ nome: rodando, nivel: 'rodando', detalhe: 'em execução…' }) : ''); };
+    $('dg-status').className = 'rounded-2xl border p-5 bg-white border-slate-200';
+    $('dg-status').innerHTML = `<div class="flex items-center gap-3 text-sm text-slate-600">${SPIN} Executando diagnóstico de "${esc(ev.titulo)}"…</div>`;
+
+    // 0. ambiente do frontend
+    const base = this.baseUrl();
+    itens.push(/^https:/.test(base)
+      ? { nome: 'Publicação do frontend', nivel: 'ok', detalhe: `Página servida em HTTPS (${base}).` }
+      : { nome: 'Publicação do frontend', nivel: 'alerta', detalhe: 'Página aberta fora de HTTPS: o QR Code apontaria para um endereço local. Publique no GitHub Pages (ou defina CONFIG.BASE_URL).' });
+
+    // 1. ping / latência
+    render('API do Apps Script – latência');
+    try {
+      const t0 = performance.now();
+      await apiGet({ action: 'ping' }, 20000);
+      const ms = Math.round(performance.now() - t0);
+      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: ms < 3000 ? 'ok' : ms < 8000 ? 'alerta' : 'erro', detalhe: `${ms} ms de ida e volta.${ms >= 3000 ? ' Latência alta: rode de novo para descartar "partida a frio".' : ''}` });
+    } catch (e) {
+      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: 'erro', detalhe: e.message });
+      render(); this.statusFinal(itens, false); carregando(btn, false); return;
+    }
+
+    // 2. bateria no servidor
+    render('Planilha, Drive, cota, fundo e geração de PDF');
+    let diag;
+    try {
+      diag = await this.api({ action: 'diagnostico', eventoId: ev.id });
+      diag.itens.filter((i) => i.id !== 'api').forEach((i) => itens.push(i));
+    } catch (e) {
+      itens.push({ nome: 'Bateria de testes no servidor', nivel: 'erro', detalhe: e.message });
+      render(); this.statusFinal(itens, false); carregando(btn, false); return;
+    }
+
+    // 3. disparo de teste
+    let testeOk = diag.testeEnviado;
+    if (diag.bloqueado) {
+      itens.push({ nome: 'Disparo de teste', nivel: 'erro', detalhe: 'Não executado: corrija os itens bloqueantes acima.' });
+      testeOk = false;
+    } else if (comTeste) {
+      render('Disparo de teste (envio real)');
+      try {
+        const t = await this.api({ action: 'testSend', eventoId: ev.id, destino });
+        testeOk = true;
+        itens.push({ nome: 'Disparo de teste (envio real)', nivel: 'ok', detalhe: `Certificado de amostra enviado para ${t.destino}. Abra o e-mail e confira layout e anexo. Cota restante: ${t.cotaEmail}.` });
+      } catch (e) {
+        testeOk = false;
+        itens.push({ nome: 'Disparo de teste (envio real)', nivel: 'erro', detalhe: e.message });
+      }
+    } else {
+      itens.push(testeOk
+        ? { nome: 'Disparo de teste', nivel: 'ok', detalhe: 'Já realizado para a versão atual do evento.' }
+        : { nome: 'Disparo de teste', nivel: 'erro', detalhe: 'Ainda não realizado para a versão atual do evento. Marque "Incluir disparo de teste".' });
+    }
+
+    render();
+    this.statusFinal(itens, testeOk);
+    carregando(btn, false);
+    await this.carregarEventos();
+  },
+
+  statusFinal(itens, testeOk) {
+    const erros = itens.filter((i) => i.nivel === 'erro');
+    const alertas = itens.filter((i) => i.nivel === 'alerta');
+    const box = $('dg-status');
+    if (erros.length || !testeOk) {
+      box.className = 'rounded-2xl border-2 p-5 bg-red-50 border-red-300';
+      box.innerHTML = `<p class="text-xs font-semibold uppercase tracking-wide text-red-700">Atenção / Bloqueado</p>
+        <p class="text-lg font-semibold text-red-900 mt-1">O QR Code permanece bloqueado</p>
+        <ul class="mt-2 text-sm text-red-800 list-disc pl-5">${erros.map((e) => `<li><b>${esc(e.nome)}:</b> ${esc(e.detalhe)}</li>`).join('') || '<li>Falta o disparo de teste.</li>'}</ul>`;
+    } else if (alertas.length) {
+      box.className = 'rounded-2xl border-2 p-5 bg-emerald-50 border-emerald-300';
+      box.innerHTML = `<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Pronto para o Evento</p>
+        <p class="text-lg font-semibold text-emerald-900 mt-1">QR Code liberado, com ${alertas.length} ressalva(s)</p>
+        <ul class="mt-2 text-sm text-amber-800 list-disc pl-5">${alertas.map((e) => `<li><b>${esc(e.nome)}:</b> ${esc(e.detalhe)}</li>`).join('')}</ul>`;
+    } else {
+      box.className = 'rounded-2xl border-2 p-5 bg-emerald-50 border-emerald-300';
+      box.innerHTML = `<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Pronto para o Evento</p>
+        <p class="text-lg font-semibold text-emerald-900 mt-1">Todos os testes passaram. QR Code liberado.</p>
+        <p class="text-sm text-emerald-800 mt-1">Recomendação: rode o diagnóstico de novo no dia do evento (a cota de e-mail renova a cada 24 h).</p>`;
+    }
+  },
+
+  /* ---------- QR Code ---------- */
+  baseUrl() { return CONFIG.BASE_URL || (location.origin + location.pathname); },
+  urlEvento(ev) { return this.baseUrl().split('?')[0] + '?evento=' + encodeURIComponent(ev.id); },
+
+  renderQR() {
+    const ev = this.eventoSelecionado();
+    $('qr-abertas').disabled = !ev;
+    $('qr-abertas').checked = !!(ev && ev.inscricoes_abertas);
+    if (!ev || !ev.aprovado) {
+      $('qr-bloqueado').hidden = false;
+      $('qr-liberado').hidden = true;
+      $('qr-motivo').textContent = !ev ? 'Cadastre um evento para gerar o QR Code.'
+        : !ev.diag_ok_em ? 'O diagnóstico ainda não foi aprovado para a versão atual deste evento.'
+        : 'Falta o disparo de teste para a versão atual deste evento.';
+      return;
+    }
+    const url = this.urlEvento(ev);
+    $('qr-bloqueado').hidden = true;
+    $('qr-liberado').hidden = false;
+    $('qr-url').value = url;
+    const local = !/^https:/.test(url);
+    $('qr-aviso-url').hidden = !local;
+    $('qr-aviso-url').textContent = local ? 'Esta página não está em HTTPS público: o QR Code não funcionará no celular dos alunos. Publique no GitHub Pages.' : '';
+    $('qr-aprovado-em').textContent = `Diagnóstico aprovado em ${dataHora(ev.diag_ok_em)} · teste enviado em ${dataHora(ev.teste_ok_em)}`;
+    const alvo = $('qr-canvas');
+    alvo.innerHTML = '';
+    if (typeof QRCode === 'undefined') { alvo.textContent = 'Biblioteca de QR Code não carregou (verifique a internet).'; return; }
+    new QRCode(alvo, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+  },
+
+  qrDataUrl(tamanho = 1024) {
+    const ev = this.eventoSelecionado();
+    const tmp = document.createElement('div');
+    new QRCode(tmp, { text: this.urlEvento(ev), width: tamanho, height: tamanho, correctLevel: QRCode.CorrectLevel.M });
+    const cv = tmp.querySelector('canvas');
+    // margem branca (zona de silêncio) para leitura confiável
+    const m = Math.round(tamanho * 0.08), out = document.createElement('canvas');
+    out.width = out.height = tamanho + m * 2;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(cv, m, m);
+    return out.toDataURL('image/png');
+  },
+
+  baixarQR() {
+    const ev = this.eventoSelecionado();
+    if (!ev || !ev.aprovado) return toast('QR Code bloqueado até o diagnóstico ser aprovado.', 'erro');
+    const a = document.createElement('a');
+    a.href = this.qrDataUrl();
+    a.download = `QRCode_${ev.id}.png`;
+    a.click();
+  },
+
+  imprimirQR() {
+    const ev = this.eventoSelecionado();
+    if (!ev || !ev.aprovado) return toast('QR Code bloqueado até o diagnóstico ser aprovado.', 'erro');
+    const w = window.open('', '_blank');
+    if (!w) return toast('Permita pop-ups para imprimir o cartaz.', 'alerta');
+    w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>QR Code – ${esc(ev.titulo)}</title>
+      <style>@page{size:A4;margin:18mm}body{font-family:Arial,sans-serif;text-align:center;color:#0b2545}
+      h1{font-size:28px;margin:0 0 6px}h2{font-size:18px;font-weight:normal;margin:0 0 24px;color:#334155}
+      img{width:120mm;height:120mm}ol{text-align:left;display:inline-block;font-size:16px;line-height:1.7;color:#1e293b}
+      .tag{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#64748b}.url{font-size:11px;color:#64748b;word-break:break-all;margin-top:16px}</style></head>
+      <body><p class="tag">ILES/ULBRA Itumbiara</p><h1>Emita seu certificado</h1><h2>${esc(ev.titulo)} · ${esc(dataExtenso(ev.data))}</h2>
+      <img src="${this.qrDataUrl(900)}" alt="QR Code"><br>
+      <ol><li>Aponte a câmera do celular para o QR Code.</li><li>Preencha nome, e-mail${CONFIG.DOMINIOS.length ? ` <b>@${esc(CONFIG.DOMINIOS[0])}</b>` : ''} e curso.</li><li>Tire uma selfie no evento e envie.</li><li>O certificado chega em PDF no seu e-mail.</li></ol>
+      <p class="url">${esc(this.urlEvento(ev))}</p>
+      <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+    w.document.close();
+  },
+
+  async alternarInscricoes(abertas) {
+    const ev = this.eventoSelecionado();
+    if (!ev) return;
+    try {
+      await this.api({ action: 'alternarInscricoes', eventoId: ev.id, abertas }, 30000);
+      ev.inscricoes_abertas = abertas;
+      this.renderEventos();
+      toast(abertas ? 'Emissões abertas.' : 'Emissões encerradas: alunos verão aviso.', abertas ? 'ok' : 'alerta');
+    } catch (e) {
+      $('qr-abertas').checked = !abertas;
+      toast(e.message, 'erro');
+    }
+  },
+
+  /* ---------- auditoria ---------- */
+  async carregarParticipantes() {
+    const ev = this.eventoSelecionado('au-evento');
+    const tb = $('au-tabela');
+    if (!ev) { tb.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Nenhum evento selecionado.</td></tr>'; return; }
+    tb.innerHTML = `<tr><td colspan="6" class="px-4 py-8"><div class="flex justify-center text-slate-400">${SPIN}</div></td></tr>`;
+    try {
+      const r = await this.api({ action: 'listarParticipantes', eventoId: ev.id }, 60000);
+      this.participantes = r.participantes;
+      const s = r.resumo;
+      const card = (rotulo, valor, cor) => `<div class="bg-white rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">${rotulo}</p><p class="text-2xl font-semibold ${cor}">${valor}</p></div>`;
+      $('au-resumo').innerHTML = card('Registros', s.total, 'text-slate-900') + card('Enviados', s.ENVIADO || 0, 'text-emerald-600')
+        + card('Na fila', (s.PENDENTE || 0) + (s.PROCESSANDO || 0), 'text-amber-600') + card('Com erro', s.ERRO || 0, 'text-red-600')
+        + card('Cota de e-mail hoje', r.cotaEmail, 'text-ulbra-700');
+      this.renderParticipantes();
+    } catch (e) {
+      tb.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-red-600">${esc(e.message)}</td></tr>`;
+    }
+  },
+
+  renderParticipantes() {
+    const termo = $('au-busca').value.trim().toLowerCase();
+    const lista = this.participantes.filter((p) => !termo || `${p.nome} ${p.email} ${p.curso}`.toLowerCase().includes(termo));
+    const tb = $('au-tabela');
+    if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Nenhum registro.</td></tr>'; return; }
+    const badge = {
+      ENVIADO: 'bg-emerald-100 text-emerald-700', PENDENTE: 'bg-amber-100 text-amber-700',
+      PROCESSANDO: 'bg-slate-100 text-slate-600', ERRO: 'bg-red-100 text-red-700'
+    };
+    tb.innerHTML = lista.map((p) => `<tr class="align-top">
+      <td class="px-4 py-3 whitespace-nowrap text-slate-500">${esc(dataHora(p.registrado_em))}</td>
+      <td class="px-4 py-3"><p class="font-medium text-slate-800">${esc(p.nome)}</p><p class="text-xs text-slate-500">${esc(p.email)}</p></td>
+      <td class="px-4 py-3 text-slate-600">${esc(p.curso)}</td>
+      <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-medium ${badge[p.status] || badge.PROCESSANDO}">${esc(p.status)}</span>
+        ${p.erro ? `<p class="text-[11px] text-slate-400 mt-1 max-w-[220px]">${esc(p.erro)}</p>` : ''}</td>
+      <td class="px-4 py-3">${p.selfie_id ? `<button data-selfie="${esc(p.selfie_id)}" data-nome="${esc(p.nome)}" class="text-ulbra-600 text-sm font-medium">Ver selfie</button>` : '<span class="text-xs text-slate-400">—</span>'}</td>
+      <td class="px-4 py-3 text-right"><button data-reenviar="${p.linha}" class="h-8 px-3 rounded-lg border border-slate-300 text-xs font-medium">Reenviar</button></td>
+    </tr>`).join('');
+    tb.querySelectorAll('[data-selfie]').forEach((b) => { b.onclick = () => this.verSelfie(b.dataset.selfie, b.dataset.nome, b); });
+    tb.querySelectorAll('[data-reenviar]').forEach((b) => { b.onclick = () => this.reenviar(b.dataset.reenviar, b); });
+  },
+
+  async verSelfie(id, nome, btn) {
+    carregando(btn, true);
+    try {
+      const r = await this.api({ action: 'verSelfie', selfieId: id }, 60000);
+      const src = `data:${r.contentType};base64,${r.base64}`;
+      $('mv-titulo').textContent = 'Selfie – ' + nome;
+      $('mv-corpo').innerHTML = `<img src="${src}" alt="Selfie de ${esc(nome)}" class="max-h-[75vh] rounded-lg">`;
+      $('mv-download').href = src;
+      $('mv-download').download = `selfie_${nome.replace(/\s+/g, '_')}.jpg`;
+      $('modal-visual').hidden = false;
+    } catch (e) { toast(e.message, 'erro'); } finally { carregando(btn, false); }
+  },
+
+  async reenviar(linha, btn) {
+    if (!confirm('Reenviar o certificado deste participante? Consome 1 envio da cota.')) return;
+    carregando(btn, true);
+    try { await this.api({ action: 'reenviarCertificado', linha }); toast('Certificado reenviado.', 'ok'); this.carregarParticipantes(); }
+    catch (e) { toast(e.message, 'erro', 6000); } finally { carregando(btn, false); }
+  },
+
+  async reprocessar() {
+    const btn = $('btn-au-reprocessar');
+    carregando(btn, true, 'Processando…');
+    try {
+      const r = await this.api({ action: 'reprocessarPendentes' });
+      const x = r.resultado;
+      toast(x.ignorado ? x.motivo : `${x.enviados} enviado(s), ${x.falhas} falha(s)${x.restantes ? `, ${x.restantes} restante(s)` : ''}.`, x.falhas ? 'alerta' : 'ok', 6000);
+      this.carregarParticipantes();
+    } catch (e) { toast(e.message, 'erro'); } finally { carregando(btn, false); }
+  },
+
+  exportarCSV() {
+    const ev = this.eventoSelecionado('au-evento');
+    if (!this.participantes.length) return toast('Nada para exportar.', 'alerta');
+    const cols = ['registrado_em', 'nome', 'email', 'curso', 'status', 'tentativas', 'enviado_em', 'erro'];
+    const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = '﻿' + [cols.join(';'), ...this.participantes.map((p) => cols.map((c) => q(c.endsWith('_em') ? dataHora(p[c]) : p[c])).join(';'))].join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = `participantes_${ev ? ev.id : 'evento'}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  },
+
+  /* ---------- visualizador ---------- */
+  abrirPdf(base64, nome) {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    this._urlPdf = url;
+    $('mv-titulo').textContent = 'PDF de prova – ' + nome;
+    $('mv-corpo').innerHTML = `<iframe src="${url}" title="PDF de prova" class="w-full h-[75vh] rounded-lg bg-white"></iframe>`;
+    $('mv-download').href = url;
+    $('mv-download').download = nome;
+    $('modal-visual').hidden = false;
+  },
+
+  fecharVisualizador() {
+    $('modal-visual').hidden = true;
+    $('mv-corpo').innerHTML = '';
+    if (this._urlPdf) { URL.revokeObjectURL(this._urlPdf); this._urlPdf = null; }
+  }
+};
+</script>
+</body>
+</html>
