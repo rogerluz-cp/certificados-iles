@@ -408,7 +408,7 @@ const CONFIG = {
            'Engenharia de Produção', 'Engenharia de Software', 'Psicologia', 'Sistemas de Informação', 'Veterinária'],
   SELFIE_MAX_LADO: 1024,
   SELFIE_QUALIDADE: 0.72,
-  TIMEOUT_HEALTH_MS: 15000,
+  TIMEOUT_HEALTH_MS: 30000,
   TIMEOUT_ENVIO_MS: 120000,
   TIMEOUT_ADMIN_MS: 180000,
   DIZERES_PADRAO: 'Certificamos que **{nome}** participou, como ouvinte, do evento intitulado **“{evento}”**, promovido pelo curso de Bacharelado em Direito do Instituto Luterano de Ensino Superior de Itumbiara – ILES/ULBRA, realizado no dia {data}, com carga horária total de **{carga_horaria}** horas.',
@@ -999,13 +999,23 @@ const Admin = {
 
     // 1. ping / latência
     render('API do Apps Script – latência');
+    // 1ª chamada "acorda" o Apps Script (partida a frio); a 2ª mede a latência real.
+    let aquecimentoMs = null, falhaPing = null;
+    try {
+      const t = performance.now();
+      await apiGet({ action: 'ping' }, 60000);
+      aquecimentoMs = Math.round(performance.now() - t);
+    } catch (e) { falhaPing = e; }
     try {
       const t0 = performance.now();
-      await apiGet({ action: 'ping' }, 20000);
+      await apiGet({ action: 'ping' }, 30000);
       const ms = Math.round(performance.now() - t0);
-      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: ms < 3000 ? 'ok' : ms < 8000 ? 'alerta' : 'erro', detalhe: `${ms} ms de ida e volta.${ms >= 3000 ? ' Latência alta: rode de novo para descartar "partida a frio".' : ''}` });
+      const aq = aquecimentoMs !== null && aquecimentoMs > ms * 2 ? ` (1ª chamada, partida a frio: ${(aquecimentoMs / 1000).toFixed(1)} s)` : '';
+      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: ms < 4000 ? 'ok' : 'alerta',
+        detalhe: `${ms} ms de ida e volta${aq}.${ms >= 4000 ? ' Resposta lenta: o envio funciona, mas cada emissão pode demorar mais.' : ''}` });
     } catch (e) {
-      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: 'erro', detalhe: e.message });
+      itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: 'erro',
+        detalhe: `Sem resposta em duas tentativas (${(falhaPing || e).message}). Abra a URL do Web App com ?action=ping numa aba anônima para conferir.` });
       render(); this.statusFinal(itens, false); carregando(btn, false); return;
     }
 
