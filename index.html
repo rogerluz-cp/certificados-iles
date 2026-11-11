@@ -85,7 +85,23 @@
           <input id="f-nome" type="text" autocomplete="name" autocapitalize="words" maxlength="120"
                  class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="Como deve aparecer no certificado">
           <p class="erro text-xs text-red-600 mt-1" data-for="f-nome" hidden></p>
+          <p class="text-xs text-slate-400 mt-1">Por extenso, sem abreviações.</p>
         </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="f-cpf" class="block text-sm font-medium text-slate-700 mb-1">CPF</label>
+            <input id="f-cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14"
+                   class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="000.000.000-00">
+          </div>
+          <div>
+            <label for="f-nasc" class="block text-sm font-medium text-slate-700 mb-1">Data de nascimento</label>
+            <input id="f-nasc" type="text" inputmode="numeric" autocomplete="bday" maxlength="10"
+                   class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="dd/mm/aaaa">
+          </div>
+        </div>
+        <p class="erro text-xs text-red-600 -mt-2" data-for="f-cpf" hidden></p>
+        <p class="erro text-xs text-red-600 -mt-2" data-for="f-nasc" hidden></p>
 
         <div>
           <label for="f-email" class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
@@ -93,6 +109,13 @@
                  class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="seu.email@exemplo.com">
           <p class="erro text-xs text-red-600 mt-1" data-for="f-email" hidden></p>
           <p class="text-xs text-slate-400 mt-1">O certificado em PDF será enviado para este endereço.</p>
+        </div>
+
+        <div>
+          <label for="f-tel" class="block text-sm font-medium text-slate-700 mb-1">Telefone com DDD</label>
+          <input id="f-tel" type="tel" inputmode="tel" autocomplete="tel-national"
+                 class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="(64) 99999-9999">
+          <p class="erro text-xs text-red-600 mt-1" data-for="f-tel" hidden></p>
         </div>
 
         <div>
@@ -127,7 +150,7 @@
 
         <label class="flex items-start gap-2.5 text-sm text-slate-600">
           <input id="f-consent" type="checkbox" class="mt-0.5 w-4 h-4 accent-[#0b2545]">
-          <span>Autorizo o uso da minha selfie exclusivamente para comprovação de presença neste evento.</span>
+          <span>Autorizo o uso dos meus dados (nome, CPF, data de nascimento, e-mail e telefone) e da selfie exclusivamente para registro de presença e emissão do certificado deste evento.</span>
         </label>
         <p class="erro text-xs text-red-600 -mt-2" data-for="f-consent" hidden></p>
 
@@ -286,12 +309,15 @@
         <div class="flex flex-wrap gap-2">
           <button id="btn-au-atualizar" class="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-medium">Atualizar</button>
           <button id="btn-au-reprocessar" class="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-medium">Reprocessar pendentes</button>
-          <button id="btn-au-csv" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">Exportar CSV</button>
+          <button id="btn-au-csv" class="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-medium">Exportar CSV</button>
+          <button id="btn-au-xlsx" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Lista de participantes (.xlsx)</button>
+          <button id="btn-au-encerrar" class="h-10 px-4 rounded-lg border border-red-300 bg-white text-red-700 text-sm font-medium">Encerrar evento…</button>
         </div>
       </div>
+      <div id="au-encerrado" hidden class="mb-4 rounded-xl border border-slate-300 bg-slate-100 text-slate-700 text-sm p-3"></div>
       <div id="au-resumo" class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4"></div>
       <div class="mb-3">
-        <input id="au-busca" type="search" placeholder="Filtrar por nome, e-mail ou curso…" class="w-full sm:w-80 h-10 px-3 rounded-lg border border-slate-300 text-sm">
+        <input id="au-busca" type="search" placeholder="Filtrar por nome, e-mail, CPF ou curso…" class="w-full sm:w-80 h-10 px-3 rounded-lg border border-slate-300 text-sm">
       </div>
       <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
         <table class="w-full text-sm">
@@ -377,6 +403,69 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: ENCERRAR EVENTO ===================== -->
+<div id="modal-encerrar" hidden class="fixed inset-0 z-40 bg-slate-900/50 overflow-y-auto">
+  <div class="min-h-full flex items-start justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl my-6">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900">Encerrar evento</h3>
+        <button type="button" id="me2-fechar" class="text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Fechar">×</button>
+      </div>
+
+      <div id="enc-form" class="p-6 space-y-5">
+        <div>
+          <p id="enc-titulo" class="font-medium text-slate-900"></p>
+          <p class="text-sm text-slate-600 mt-1">O encerramento é <b>definitivo</b>: fecha as emissões, apaga as selfies e o modelo do certificado e remove nome, e-mail, CPF, nascimento e telefone da planilha. Ficam só data, curso e status, para as métricas de participação.</p>
+        </div>
+
+        <div id="enc-resumo" class="grid grid-cols-3 gap-2 text-center"></div>
+
+        <ol class="space-y-4 text-sm">
+          <li id="enc-passo1">
+            <p class="font-medium text-slate-800">1. Baixe a lista de participantes</p>
+            <button type="button" id="enc-baixar" class="mt-2 h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Baixar lista (.xlsx)</button>
+            <label class="mt-2 flex items-start gap-2 text-slate-600">
+              <input id="enc-conferi" type="checkbox" disabled class="mt-0.5 w-4 h-4 accent-[#0b2545]">
+              <span id="enc-conferi-txt">Abri o arquivo baixado e conferi os participantes.</span>
+            </label>
+          </li>
+          <li id="enc-passo-pend" hidden>
+            <p class="font-medium text-amber-800">Pendências</p>
+            <label class="mt-1 flex items-start gap-2 text-amber-800">
+              <input id="enc-forcar" type="checkbox" class="mt-0.5 w-4 h-4 accent-amber-600">
+              <span id="enc-forcar-txt"></span>
+            </label>
+          </li>
+          <li>
+            <p class="font-medium text-slate-800"><span id="enc-n-conf">2</span>. Para confirmar, digite o ID do evento: <span id="enc-id" class="font-mono"></span></p>
+            <input id="enc-confirma" autocomplete="off" autocapitalize="characters" spellcheck="false" class="mt-2 w-40 h-10 px-3 rounded-lg border border-slate-300 font-mono uppercase">
+          </li>
+        </ol>
+
+        <p id="enc-erro" hidden class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3"></p>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" id="enc-cancelar" class="h-10 px-4 rounded-lg border border-slate-300 text-sm font-medium">Cancelar</button>
+          <button type="button" id="enc-executar" disabled class="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-medium flex items-center gap-2 disabled:opacity-40">Encerrar e apagar dados</button>
+        </div>
+      </div>
+
+      <div id="enc-fim" hidden class="p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">✓</div>
+          <p class="font-semibold text-slate-900">Evento encerrado</p>
+        </div>
+        <ul id="enc-resultado" class="text-sm text-slate-700 list-disc pl-5 space-y-1"></ul>
+        <div class="text-sm bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3">
+          <b>Último passo:</b> os arquivos foram para a lixeira do Drive, onde ficam até 30 dias. Para eliminá-los já,
+          abra a <a href="https://drive.google.com/drive/trash" target="_blank" rel="noopener" class="underline font-medium">Lixeira do Google Drive</a>
+          e clique em <b>Esvaziar lixeira</b> (com a conta do sistema).
+        </div>
+        <div class="flex justify-end"><button type="button" id="enc-ok" class="h-10 px-5 rounded-lg bg-ulbra-900 text-white text-sm font-medium">Concluir</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: VISUALIZADOR ===================== -->
 <div id="modal-visual" hidden class="fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] flex flex-col">
@@ -442,6 +531,68 @@ function emailValido(email) {
   const m = /^[a-z0-9._%+-]+@((?:[a-z0-9-]+\.)+[a-z]{2,})$/.exec(email);
   return !!m && (CONFIG.DOMINIOS.length === 0 || CONFIG.DOMINIOS.includes(m[1]));
 }
+/* ---------- dados pessoais: mesmas regras do Código.gs ---------- */
+const soDigitos = (s) => String(s || '').replace(/\D/g, '');
+const CONECTIVOS_NOME = ['da', 'das', 'de', 'do', 'dos', 'e', 'di', 'du', 'del', 'van', 'von'];
+function validarNomeCompleto(nome) {
+  if (nome.length < 5 || nome.length > 120) return 'Informe seu nome completo, como deve sair no certificado.';
+  if (/[^A-Za-zÀ-ÖØ-öø-ÿ' -]/.test(nome)) return 'O nome deve ter apenas letras (sem números, pontos ou símbolos).';
+  const partes = nome.split(' ').filter((p) => !CONECTIVOS_NOME.includes(p.toLowerCase()));
+  if (partes.length < 2) return 'Informe nome e sobrenome completos.';
+  if (partes.some((p) => p.replace(/['-]/g, '').length < 2)) return 'Escreva o nome completo, sem abreviações (ex.: "Maria Souza", não "Maria S").';
+  return '';
+}
+function cpfValido(cpf) {
+  if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
+  const dv = (n) => { let soma = 0; for (let i = 0; i < n; i++) soma += Number(cpf[i]) * (n + 1 - i); const r = (soma * 10) % 11; return r === 10 ? 0 : r; };
+  return dv(9) === Number(cpf[9]) && dv(10) === Number(cpf[10]);
+}
+function mascaraCPF(v) {
+  const d = soDigitos(v).slice(0, 11);
+  return d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d{1,2})$/, '.$1-$2');
+}
+function mascaraData(v) {
+  const d = soDigitos(v).slice(0, 8);
+  return d.replace(/^(\d{2})(\d)/, '$1/$2').replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+}
+function mascaraTelefone(v) {
+  let d = soDigitos(v);
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);   // colou com +55
+  if (d.length > 11 && d.startsWith('0')) d = d.slice(1);    // colou com 0 da operadora
+  d = d.slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : '';
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+/** "dd/mm/aaaa" → "aaaa-mm-dd" (ou '' se incompleta) */
+function dataParaISO(v) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(v || '').trim());
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+function validarNascimento(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return 'Informe a data de nascimento completa (dd/mm/aaaa).';
+  const [a, mes, d] = [+m[1], +m[2], +m[3]];
+  const dt = new Date(Date.UTC(a, mes - 1, d));
+  if (dt.getUTCFullYear() !== a || dt.getUTCMonth() !== mes - 1 || dt.getUTCDate() !== d) return 'Data de nascimento inválida.';
+  const idade = (Date.now() - dt.getTime()) / (365.25 * 864e5);
+  if (idade < 10 || idade > 110) return 'Confira o ano da data de nascimento.';
+  return '';
+}
+const DDDS = [11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 24, 27, 28, 31, 32, 33, 34, 35, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 53, 54, 55,
+              61, 62, 63, 64, 65, 66, 67, 68, 69, 71, 73, 74, 75, 77, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99];
+function validarTelefone(tel) {
+  if (!tel) return 'Informe seu telefone com DDD.';
+  if (tel.length < 10) return 'Informe o telefone com DDD, ex.: (64) 99999-9999.';
+  if (!DDDS.includes(Number(tel.slice(0, 2)))) return 'DDD inválido. Confira os dois primeiros números.';
+  if (tel.length === 11 && tel[2] !== '9') return 'Celular deve começar com 9 após o DDD.';
+  if (tel.length === 10 && !'2345'.includes(tel[2])) return 'Número incompleto: celulares têm 9 dígitos após o DDD.';
+  return '';
+}
+/** "1990-05-12" → "12/05/1990" */
+const isoParaBR = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+
 function toast(msg, tipo = 'info', ms = 4000) {
   const t = $('toast');
   const cores = { info: 'bg-slate-900 text-white', ok: 'bg-emerald-600 text-white', erro: 'bg-red-600 text-white', alerta: 'bg-amber-500 text-slate-900' };
@@ -535,6 +686,10 @@ const Aluno = {
     $('f-email').addEventListener('blur', () => this.validarCampo('f-email'));
     $('f-email').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\s/g, '').toLowerCase(); this.limparErro('f-email'); });
     $('f-nome').addEventListener('blur', () => this.validarCampo('f-nome'));
+    $('f-cpf').addEventListener('input', (e) => { e.target.value = mascaraCPF(e.target.value); this.limparErro('f-cpf'); });
+    $('f-nasc').addEventListener('input', (e) => { e.target.value = mascaraData(e.target.value); this.limparErro('f-nasc'); });
+    $('f-tel').addEventListener('input', (e) => { e.target.value = mascaraTelefone(e.target.value); this.limparErro('f-tel'); });
+    ['f-cpf', 'f-nasc', 'f-tel'].forEach((id) => $(id).addEventListener('blur', () => { if ($(id).value) this.validarCampo(id); }));
     ['f-nome', 'f-curso', 'f-consent'].forEach((id) => $(id).addEventListener('input', () => this.limparErro(id)));
 
     this.verificar();
@@ -604,9 +759,21 @@ const Aluno = {
   validarCampo(id) {
     this.limparErro(id);
     if (id === 'f-nome') {
-      const v = $('f-nome').value.trim().replace(/\s+/g, ' ');
-      if (v.length < 5 || !v.includes(' ')) return this.erro(id, 'Informe nome e sobrenome, como devem sair no certificado.'), false;
-      if (/[0-9@]/.test(v)) return this.erro(id, 'O nome não deve conter números ou "@".'), false;
+      const msg = validarNomeCompleto($('f-nome').value.trim().replace(/\s+/g, ' '));
+      if (msg) return this.erro(id, msg), false;
+    }
+    if (id === 'f-cpf') {
+      const v = soDigitos($('f-cpf').value);
+      if (!v) return this.erro(id, 'Informe seu CPF.'), false;
+      if (!cpfValido(v)) return this.erro(id, 'CPF inválido. Confira os 11 números.'), false;
+    }
+    if (id === 'f-nasc') {
+      const msg = validarNascimento(dataParaISO($('f-nasc').value));
+      if (msg) return this.erro(id, msg), false;
+    }
+    if (id === 'f-tel') {
+      const msg = validarTelefone(soDigitos($('f-tel').value));
+      if (msg) return this.erro(id, msg), false;
     }
     if (id === 'f-email') {
       const v = $('f-email').value.trim().toLowerCase();
@@ -639,7 +806,7 @@ const Aluno = {
 
   async enviar() {
     $('al-erro-geral').hidden = true;
-    const campos = ['f-nome', 'f-email', 'f-curso'];
+    const campos = ['f-nome', 'f-cpf', 'f-nasc', 'f-email', 'f-tel', 'f-curso'];
     let ok = campos.map((c) => this.validarCampo(c)).every(Boolean);
     if (!this.selfie) { this.erro('selfie', 'Tire ou selecione a selfie no evento.'); ok = false; }
     if (!this.validarCampo('f-consent')) ok = false;
@@ -657,7 +824,10 @@ const Aluno = {
         eventoId: EVENTO_ID,
         dados: {
           nome: $('f-nome').value.trim().replace(/\s+/g, ' '),
+          cpf: soDigitos($('f-cpf').value),
+          nascimento: dataParaISO($('f-nasc').value),
           email: $('f-email').value.trim().toLowerCase(),
+          telefone: soDigitos($('f-tel').value),
           curso: $('f-curso').value,
           selfie: this.selfie,
           consentimento: $('f-consent').checked
@@ -684,6 +854,21 @@ const Aluno = {
     }
   }
 };
+
+/** Carrega o ExcelJS só quando a organização exporta a lista (não pesa na página do aluno). */
+function carregarExcelJS() {
+  if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  const fontes = ['https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
+                  'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'];
+  const tentar = (i) => new Promise((ok, falha) => {
+    const s = document.createElement('script');
+    s.src = fontes[i];
+    s.onload = () => (window.ExcelJS ? ok(window.ExcelJS) : falha(new Error('biblioteca incompleta')));
+    s.onerror = () => falha(new Error('sem conexão com a CDN'));
+    document.head.appendChild(s);
+  }).catch((e) => (i + 1 < fontes.length ? tentar(i + 1) : Promise.reject(e)));
+  return tentar(0);
+}
 
 /** Redimensiona e comprime a imagem no navegador (JPEG em Base64). */
 function comprimirImagem(arquivo, maxLado, qualidade) {
@@ -793,6 +978,14 @@ const Admin = {
     $('btn-au-atualizar').onclick = () => this.carregarParticipantes();
     $('btn-au-reprocessar').onclick = () => this.reprocessar();
     $('btn-au-csv').onclick = () => this.exportarCSV();
+    $('btn-au-xlsx').onclick = () => this.exportarListaXLSX();
+    $('btn-au-encerrar').onclick = () => this.abrirEncerramento();
+    ['me2-fechar', 'enc-cancelar'].forEach((id) => { $(id).onclick = () => { $('modal-encerrar').hidden = true; }; });
+    $('enc-ok').onclick = () => { $('modal-encerrar').hidden = true; };
+    $('enc-baixar').onclick = async () => { if (await this.exportarListaXLSX($('enc-baixar'))) { $('enc-conferi').disabled = false; this.validarEncerramento(); } };
+    ['enc-conferi', 'enc-forcar'].forEach((id) => { $(id).onchange = () => this.validarEncerramento(); });
+    $('enc-confirma').oninput = () => this.validarEncerramento();
+    $('enc-executar').onclick = () => this.executarEncerramento();
     $('au-busca').oninput = () => this.renderParticipantes();
 
     $('mv-fechar').onclick = () => this.fecharVisualizador();
@@ -837,10 +1030,14 @@ const Admin = {
       return;
     }
     lista.innerHTML = this.eventos.map((ev) => {
-      const selo = ev.aprovado
+      const selo = ev.encerrado_em
+        ? '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-medium">Encerrado</span>'
+        : ev.aprovado
         ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">Pronto para o evento</span>'
         : '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">Diagnóstico pendente</span>';
-      const aberto = ev.inscricoes_abertas
+      const aberto = ev.encerrado_em
+        ? `<span class="text-xs text-slate-500">● encerrado em ${esc(dataHora(ev.encerrado_em))}, dados apagados</span>`
+        : ev.inscricoes_abertas
         ? '<span class="text-xs text-emerald-700">● emissões abertas</span>'
         : '<span class="text-xs text-slate-500">● emissões fechadas</span>';
       return `<article class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col">
@@ -850,8 +1047,8 @@ const Admin = {
         <p class="text-sm text-slate-500 mt-1">${esc(dataExtenso(ev.data))} · ${esc(formatarCH(ev.carga_horaria))} h · ID <span class="font-mono">${esc(ev.id)}</span></p>
         <div class="flex items-center gap-3 mt-2 text-sm text-slate-600">${aberto}<span class="text-xs">${ev.participantes} participante(s)</span></div>
         <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100">
-          <button data-acao="editar" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Editar</button>
-          <button data-acao="diag" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-sm">Diagnóstico &amp; QR</button>
+          ${ev.encerrado_em ? '' : `<button data-acao="editar" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Editar</button>
+          <button data-acao="diag" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-sm">Diagnóstico &amp; QR</button>`}
           <button data-acao="audit" data-id="${esc(ev.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Auditoria</button>
         </div>
       </article>`;
@@ -1085,12 +1282,13 @@ const Admin = {
 
   renderQR() {
     const ev = this.eventoSelecionado();
-    $('qr-abertas').disabled = !ev;
+    $('qr-abertas').disabled = !ev || !!ev.encerrado_em;
     $('qr-abertas').checked = !!(ev && ev.inscricoes_abertas);
-    if (!ev || !ev.aprovado) {
+    if (!ev || !ev.aprovado || ev.encerrado_em) {
       $('qr-bloqueado').hidden = false;
       $('qr-liberado').hidden = true;
       $('qr-motivo').textContent = !ev ? 'Cadastre um evento para gerar o QR Code.'
+        : ev.encerrado_em ? 'Evento encerrado: emissões fechadas e dados apagados.'
         : !ev.diag_ok_em ? 'O diagnóstico ainda não foi aprovado para a versão atual deste evento.'
         : 'Falta o disparo de teste para a versão atual deste evento.';
       return;
@@ -1173,6 +1371,10 @@ const Admin = {
     try {
       const r = await this.api({ action: 'listarParticipantes', eventoId: ev.id }, 60000);
       this.participantes = r.participantes;
+      const enc = !!ev.encerrado_em;
+      $('au-encerrado').hidden = !enc;
+      $('au-encerrado').textContent = enc ? `Evento encerrado em ${dataHora(ev.encerrado_em)}. Nome, e-mail, CPF, nascimento, telefone e selfies foram apagados; restam data, curso e status para métricas.` : '';
+      ['btn-au-xlsx', 'btn-au-encerrar', 'btn-au-reprocessar'].forEach((id) => { $(id).hidden = enc; });
       const s = r.resumo;
       const card = (rotulo, valor, cor) => `<div class="bg-white rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">${rotulo}</p><p class="text-2xl font-semibold ${cor}">${valor}</p></div>`;
       $('au-resumo').innerHTML = card('Registros', s.total, 'text-slate-900') + card('Enviados', s.ENVIADO || 0, 'text-emerald-600')
@@ -1186,21 +1388,21 @@ const Admin = {
 
   renderParticipantes() {
     const termo = $('au-busca').value.trim().toLowerCase();
-    const lista = this.participantes.filter((p) => !termo || `${p.nome} ${p.email} ${p.curso}`.toLowerCase().includes(termo));
+    const lista = this.participantes.filter((p) => !termo || `${p.nome} ${p.email} ${p.curso} ${p.cpf || ''} ${soDigitos(p.cpf)} ${p.telefone || ''}`.toLowerCase().includes(termo));
     const tb = $('au-tabela');
     if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Nenhum registro.</td></tr>'; return; }
     const badge = {
       ENVIADO: 'bg-emerald-100 text-emerald-700', PENDENTE: 'bg-amber-100 text-amber-700',
-      PROCESSANDO: 'bg-slate-100 text-slate-600', ERRO: 'bg-red-100 text-red-700'
+      PROCESSANDO: 'bg-slate-100 text-slate-600', ERRO: 'bg-red-100 text-red-700', CANCELADO: 'bg-slate-200 text-slate-600'
     };
     tb.innerHTML = lista.map((p) => `<tr class="align-top">
       <td class="px-4 py-3 whitespace-nowrap text-slate-500">${esc(dataHora(p.registrado_em))}</td>
-      <td class="px-4 py-3"><p class="font-medium text-slate-800">${esc(p.nome)}</p><p class="text-xs text-slate-500">${esc(p.email)}</p></td>
+      <td class="px-4 py-3"><p class="font-medium text-slate-800">${esc(p.nome)}</p><p class="text-xs text-slate-500">${esc(p.email)}</p>${p.cpf || p.telefone ? `<p class="text-xs text-slate-400">${esc([p.cpf, isoParaBR(p.nascimento), p.telefone].filter(Boolean).join(' · '))}</p>` : ''}</td>
       <td class="px-4 py-3 text-slate-600">${esc(p.curso)}</td>
       <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-medium ${badge[p.status] || badge.PROCESSANDO}">${esc(p.status)}</span>
         ${p.erro ? `<p class="text-[11px] text-slate-400 mt-1 max-w-[220px]">${esc(p.erro)}</p>` : ''}</td>
       <td class="px-4 py-3">${p.selfie_id ? `<button data-selfie="${esc(p.selfie_id)}" data-nome="${esc(p.nome)}" class="text-ulbra-600 text-sm font-medium">Ver selfie</button>` : '<span class="text-xs text-slate-400">—</span>'}</td>
-      <td class="px-4 py-3 text-right"><button data-reenviar="${p.linha}" class="h-8 px-3 rounded-lg border border-slate-300 text-xs font-medium">Reenviar</button></td>
+      <td class="px-4 py-3 text-right">${p.email === 'ANONIMIZADO' ? '' : `<button data-reenviar="${p.linha}" class="h-8 px-3 rounded-lg border border-slate-300 text-xs font-medium">Reenviar</button>`}</td>
     </tr>`).join('');
     tb.querySelectorAll('[data-selfie]').forEach((b) => { b.onclick = () => this.verSelfie(b.dataset.selfie, b.dataset.nome, b); });
     tb.querySelectorAll('[data-reenviar]').forEach((b) => { b.onclick = () => this.reenviar(b.dataset.reenviar, b); });
@@ -1240,14 +1442,148 @@ const Admin = {
   exportarCSV() {
     const ev = this.eventoSelecionado('au-evento');
     if (!this.participantes.length) return toast('Nada para exportar.', 'alerta');
-    const cols = ['registrado_em', 'nome', 'email', 'curso', 'status', 'tentativas', 'enviado_em', 'erro'];
+    const cols = ['registrado_em', 'nome', 'cpf', 'nascimento', 'email', 'telefone', 'curso', 'status', 'tentativas', 'enviado_em', 'erro'];
     const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const csv = '﻿' + [cols.join(';'), ...this.participantes.map((p) => cols.map((c) => q(c.endsWith('_em') ? dataHora(p[c]) : p[c])).join(';'))].join('\r\n');
+    const csv = '﻿' + [cols.join(';'), ...this.participantes.map((p) => cols.map((c) => q(c.endsWith('_em') ? dataHora(p[c]) : c === 'nascimento' ? isoParaBR(p[c]) : p[c])).join(';'))].join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     a.download = `participantes_${ev ? ev.id : 'evento'}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  },
+
+  /**
+   * Lista de participantes no layout da planilha modelo (dados_participantes.xlsx):
+   * colunas Nome · CPF · Data de Nascimento · e-mail · Telefone; cabeçalho em negrito,
+   * Aptos Narrow 22, fundo azul-claro, centralizado, borda fina. Um participante por linha, em ordem alfabética.
+   */
+  async exportarListaXLSX(botao) {
+    const ev = this.eventoSelecionado('au-evento');
+    if (!ev) { toast('Selecione um evento.', 'alerta'); return false; }
+    if (ev.encerrado_em) { toast('Evento encerrado: os dados pessoais já foram apagados.', 'alerta'); return false; }
+    if (!this.participantes.length) { toast('Nenhum participante registrado neste evento.', 'alerta'); return false; }
+    const btn = botao || $('btn-au-xlsx');
+    carregando(btn, true, 'Gerando…');
+    try {
+      const ExcelJS = await carregarExcelJS();
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Certificados ILES/ULBRA';
+      wb.created = new Date();
+      const ws = wb.addWorksheet('Planilha1', { views: [{ state: 'frozen', ySplit: 1 }] });
+      ws.columns = [
+        { header: 'Nome', key: 'nome', width: 46 },
+        { header: 'CPF', key: 'cpf', width: 20 },
+        { header: 'Data de Nascimento', key: 'nasc', width: 30 },
+        { header: 'e-mail', key: 'email', width: 40 },
+        { header: 'Telefone', key: 'tel', width: 22 }
+      ];
+      const cab = ws.getRow(1);
+      cab.height = 30;
+      cab.eachCell((c) => {
+        c.font = { name: 'Aptos Narrow', size: 22, bold: true };
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCEAF7' } };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+        c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+      const lista = [...this.participantes].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }));
+      lista.forEach((p) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(p.nascimento || '');
+        const row = ws.addRow({
+          nome: p.nome,
+          cpf: p.cpf || '',
+          nasc: m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : '',
+          email: p.email,
+          tel: p.telefone || ''
+        });
+        row.font = { name: 'Aptos Narrow', size: 11 };
+        row.getCell('nasc').numFmt = 'dd/mm/yyyy';
+        row.getCell('nasc').alignment = { horizontal: 'center' };
+        row.getCell('cpf').alignment = { horizontal: 'center' };
+        row.getCell('tel').alignment = { horizontal: 'center' };
+      });
+      ws.autoFilter = { from: 'A1', to: `E${lista.length + 1}` };
+      const buf = await wb.xlsx.writeBuffer();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const slug = String(ev.titulo).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+      a.download = `dados_participantes_${slug || ev.id}_${ev.data}.xlsx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      const semDados = lista.filter((p) => !p.cpf).length;
+      toast(`${lista.length} participante(s) exportado(s).${semDados ? ` ${semDados} registro(s) antigo(s) sem CPF/telefone.` : ''}`, semDados ? 'alerta' : 'ok', 6000);
+      return true;
+    } catch (e) {
+      toast('Não foi possível gerar a planilha: ' + e.message, 'erro', 6000);
+      return false;
+    } finally { carregando(btn, false); }
+  },
+
+  /* ---------- encerramento (irreversível) ---------- */
+  async abrirEncerramento() {
+    const ev = this.eventoSelecionado('au-evento');
+    if (!ev) return toast('Selecione um evento.', 'alerta');
+    if (ev.encerrado_em) return toast('Este evento já foi encerrado.', 'alerta');
+    await this.carregarParticipantes();             // números atualizados antes de decidir
+    const lista = this.participantes;
+    const enviados = lista.filter((p) => p.status === 'ENVIADO').length;
+    const pend = lista.length - enviados;
+    this._enc = { ev, pend, total: lista.length };
+    const cx = (rot, v, cor) => `<div class="rounded-lg border border-slate-200 p-2"><p class="text-[11px] text-slate-500">${rot}</p><p class="text-xl font-semibold ${cor}">${v}</p></div>`;
+    $('enc-titulo').textContent = `${ev.titulo} · ${dataExtenso(ev.data)}`;
+    $('enc-resumo').innerHTML = cx('Participantes', lista.length, 'text-slate-900') + cx('Certificados enviados', enviados, 'text-emerald-600') + cx('Sem certificado', pend, pend ? 'text-amber-600' : 'text-slate-400');
+    $('enc-id').textContent = ev.id;
+    $('enc-confirma').value = '';
+    $('enc-erro').hidden = true;
+    $('enc-conferi').checked = false;
+    $('enc-conferi').disabled = true;
+    $('enc-passo1').hidden = lista.length === 0;
+    $('enc-n-conf').textContent = lista.length === 0 ? '1' : '2';
+    $('enc-conferi-txt').textContent = `Abri o arquivo baixado e conferi os ${lista.length} participante(s).`;
+    $('enc-passo-pend').hidden = !pend;
+    $('enc-forcar').checked = false;
+    $('enc-forcar-txt').textContent = `${pend} participante(s) ainda sem certificado enviado. Tente antes "Reprocessar pendentes" ou "Reenviar". Marque para encerrar mesmo assim: eles não receberão o certificado.`;
+    $('enc-form').hidden = false;
+    $('enc-fim').hidden = true;
+    $('modal-encerrar').hidden = false;
+    this.validarEncerramento();
+  },
+
+  validarEncerramento() {
+    const e = this._enc;
+    if (!e) return;
+    const listaOk = e.total === 0 || $('enc-conferi').checked;
+    const pendOk = !e.pend || $('enc-forcar').checked;
+    const idOk = $('enc-confirma').value.trim().toUpperCase() === e.ev.id;
+    $('enc-executar').disabled = !(listaOk && pendOk && idOk);
+  },
+
+  async executarEncerramento() {
+    const e = this._enc;
+    const btn = $('enc-executar');
+    $('enc-erro').hidden = true;
+    carregando(btn, true, 'Encerrando…');
+    try {
+      const r = await this.api({ action: 'encerrarEvento', eventoId: e.ev.id, confirmacao: $('enc-confirma').value.trim(), forcar: !!e.pend && $('enc-forcar').checked });
+      const x = r.resultado;
+      const itens = [
+        `${x.anonimizados} registro(s) anonimizado(s) na planilha (nome, e-mail, CPF, nascimento e telefone apagados).`,
+        x.cancelados ? `${x.cancelados} envio(s) pendente(s) cancelado(s).` : null,
+        x.selfiesNaPasta ? 'Pasta de selfies do evento movida para a lixeira.' : 'O evento não tinha pasta de selfies própria.',
+        x.selfiesAvulsas ? `${x.selfiesAvulsas} selfie(s) avulsa(s) movida(s) para a lixeira.` : null,
+        x.modelo ? 'Modelo do certificado movido para a lixeira.' : null,
+        'Emissões fechadas: o QR Code passa a mostrar "emissões encerradas".'
+      ].filter(Boolean);
+      $('enc-resultado').innerHTML = itens.map((t) => `<li>${esc(t)}</li>`).join('')
+        + (x.falhas || []).map((f) => `<li class="text-red-700"><b>Atenção:</b> ${esc(f)}</li>`).join('');
+      $('enc-form').hidden = true;
+      $('enc-fim').hidden = false;
+      this._enc = null;
+      await this.carregarEventos();
+      await this.carregarParticipantes();
+    } catch (err) {
+      $('enc-erro').textContent = err.message;
+      $('enc-erro').hidden = false;
+    } finally { carregando(btn, false); }
   },
 
   /* ---------- visualizador ---------- */
