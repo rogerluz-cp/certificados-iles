@@ -235,7 +235,13 @@
           <h2 class="text-lg font-semibold text-slate-900">Eventos</h2>
           <p class="text-sm text-slate-500">Cadastre o evento, rode o diagnóstico e só então imprima o QR Code.</p>
         </div>
-        <button id="btn-novo-evento" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">+ Novo evento</button>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="flex items-center gap-2 text-sm text-slate-600 select-none">
+            <input id="ev-ocultar" type="checkbox" class="w-4 h-4 accent-[#0b2545]">
+            Ocultar encerrados <span id="ev-ocultos" class="text-xs text-slate-400"></span>
+          </label>
+          <button id="btn-novo-evento" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">+ Novo evento</button>
+        </div>
       </div>
       <div id="lista-eventos" class="grid gap-3 md:grid-cols-2"></div>
     </section>
@@ -981,6 +987,15 @@ const Admin = {
     document.querySelectorAll('.tab').forEach((b) => { b.onclick = () => this.aba(b.dataset.tab); });
 
     $('btn-novo-evento').onclick = () => this.abrirFormEvento();
+    this.ocultarEncerrados = store.get('ocultar_encerrados') !== '0';   // padrão: ocultar
+    $('ev-ocultar').checked = this.ocultarEncerrados;
+    $('ev-ocultar').onchange = (e) => {
+      this.ocultarEncerrados = e.target.checked;
+      store.set('ocultar_encerrados', this.ocultarEncerrados ? '1' : '0');
+      this.renderEventos();
+      this.preencherSelects(true);
+      if (!$('tab-auditoria').hidden) this.carregarParticipantes();
+    };
     document.querySelectorAll('.fechar-modal').forEach((b) => { b.onclick = () => { $('modal-evento').hidden = true; }; });
     $('form-evento').onsubmit = (e) => { e.preventDefault(); this.salvarEvento(false); };
     $('btn-ev-preview-pdf').onclick = () => this.salvarEvento(true);
@@ -1043,13 +1058,24 @@ const Admin = {
     }
   },
 
+  /** Eventos exibidos na lista e na Auditoria, conforme a opção "Ocultar encerrados". */
+  eventosVisiveis() {
+    return this.ocultarEncerrados ? this.eventos.filter((e) => !e.encerrado_em) : this.eventos;
+  },
+
   renderEventos() {
     const lista = $('lista-eventos');
+    const ocultos = this.eventos.length - this.eventosVisiveis().length;
+    $('ev-ocultos').textContent = this.ocultarEncerrados && ocultos ? `(${ocultos})` : '';
     if (!this.eventos.length) {
       lista.innerHTML = '<div class="md:col-span-2 bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-sm text-slate-500">Nenhum evento cadastrado. Clique em <b>+ Novo evento</b>.</div>';
       return;
     }
-    lista.innerHTML = this.eventos.map((ev) => {
+    if (!this.eventosVisiveis().length) {
+      lista.innerHTML = `<div class="md:col-span-2 bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-sm text-slate-500">Todos os ${this.eventos.length} evento(s) estão encerrados. Clique em <b>+ Novo evento</b> ou desmarque <b>Ocultar encerrados</b> para vê-los.</div>`;
+      return;
+    }
+    lista.innerHTML = this.eventosVisiveis().map((ev) => {
       const selo = ev.encerrado_em
         ? '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-medium">Encerrado</span>'
         : ev.aprovado
@@ -1084,13 +1110,17 @@ const Admin = {
   },
 
   preencherSelects(manter) {
-    ['dg-evento', 'au-evento'].forEach((id) => {
-      const sel = $(id);
+    const fontes = {
+      'dg-evento': this.eventos.filter((e) => !e.encerrado_em),   // diagnóstico nunca se aplica a encerrados
+      'au-evento': this.eventosVisiveis()
+    };
+    Object.keys(fontes).forEach((id) => {
+      const sel = $(id), lista = fontes[id];
       const atual = sel.value;
-      sel.innerHTML = this.eventos.length
-        ? this.eventos.map((ev) => `<option value="${esc(ev.id)}">${esc(ev.data)} – ${esc(ev.titulo)}</option>`).join('')
+      sel.innerHTML = lista.length
+        ? lista.map((ev) => `<option value="${esc(ev.id)}">${esc(ev.data)} – ${esc(ev.titulo)}${ev.encerrado_em ? ' (encerrado)' : ''}</option>`).join('')
         : '<option value="">Nenhum evento</option>';
-      if (manter && atual && this.eventos.some((e) => e.id === atual)) sel.value = atual;
+      if (manter && atual && lista.some((e) => e.id === atual)) sel.value = atual;
     });
   },
 
