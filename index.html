@@ -489,12 +489,15 @@
    ========================================================================== */
 const CONFIG = {
   // URL do Web App publicado no Apps Script (termina em /exec)
+  // Versão mínima do Código.gs que este site exige (campos CPF/nascimento/telefone e encerramento)
+  VERSAO_BACKEND_MIN: '1.2.1',
   API_URL: 'https://script.google.com/macros/s/AKfycbzKCRBBWl5iBVDp8WszkhPcgy_joyIosKyR8-bbT5oK-ADSFGBOee_p3ZT1NUkNBcGckg/exec',
   // Deixe vazio para usar o endereço desta página (GitHub Pages) no QR Code
   BASE_URL: '',
   DOMINIOS: [],   // vazio = aceita qualquer e-mail; ex.: ['ulbra.edu.br'] restringe ao domínio
   CURSOS: ['Administração', 'Agronomia', 'Biomedicina', 'Ciências Contábeis', 'Direito', 'Engenharia Civil',
-           'Engenharia de Produção', 'Engenharia de Software', 'Psicologia', 'Sistemas de Informação', 'Veterinária'],
+           'Engenharia de Produção', 'Engenharia de Software', 'Psicologia', 'Sistemas de Informação', 'Veterinária',
+           'Comunidade'],
   SELFIE_MAX_LADO: 1024,
   SELFIE_QUALIDADE: 0.72,
   TIMEOUT_HEALTH_MS: 30000,
@@ -532,6 +535,12 @@ function emailValido(email) {
   return !!m && (CONFIG.DOMINIOS.length === 0 || CONFIG.DOMINIOS.includes(m[1]));
 }
 /* ---------- dados pessoais: mesmas regras do Código.gs ---------- */
+/** true se a versão do backend for >= CONFIG.VERSAO_BACKEND_MIN */
+function versaoAtende(v) {
+  const a = String(v || '0').split('.').map(Number), b = CONFIG.VERSAO_BACKEND_MIN.split('.').map(Number);
+  for (let i = 0; i < 3; i++) { if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0); }
+  return true;
+}
 const soDigitos = (s) => String(s || '').replace(/\D/g, '');
 const CONECTIVOS_NOME = ['da', 'das', 'de', 'do', 'dos', 'e', 'di', 'du', 'del', 'van', 'von'];
 function validarNomeCompleto(nome) {
@@ -726,6 +735,9 @@ const Aluno = {
         }
         await new Promise((r) => setTimeout(r, 1500)); // segunda chance (cold start do Apps Script)
       }
+    }
+    if (!versaoAtende(hc.versao)) {
+      return this.aviso('Sistema em atualização', 'A emissão de certificados está passando por uma atualização. Aguarde alguns minutos e tente novamente, ou procure a equipe do evento.');
     }
     if (!hc.evento) {
       return this.aviso('Evento não encontrado', 'Este QR Code não corresponde a nenhum evento ativo. Confira com a organização.', { retry: false, icone: '?', cor: 'slate' });
@@ -1205,8 +1217,12 @@ const Admin = {
     } catch (e) { falhaPing = e; }
     try {
       const t0 = performance.now();
-      await apiGet({ action: 'ping' }, 30000);
+      const pong = await apiGet({ action: 'ping' }, 30000);
       const ms = Math.round(performance.now() - t0);
+      const vOk = versaoAtende(pong.versao);
+      itens.push({ nome: 'Versão do backend (Código.gs)', nivel: vOk ? 'ok' : 'erro',
+        detalhe: vOk ? `v${pong.versao}, compatível com este site.`
+          : `O Apps Script publicado está na v${pong.versao || '1.0.0'}, mas este site exige v${CONFIG.VERSAO_BACKEND_MIN}. Os alunos teriam CPF, nascimento e telefone descartados. Cole o novo Código.gs e publique em Implantar → Gerenciar implantações → ✏️ → Nova versão.` });
       const aq = aquecimentoMs !== null && aquecimentoMs > ms * 2 ? ` (1ª chamada, partida a frio: ${(aquecimentoMs / 1000).toFixed(1)} s)` : '';
       itens.push({ nome: 'API do Apps Script – latência (ping/pong)', nivel: ms < 4000 ? 'ok' : 'alerta',
         detalhe: `${ms} ms de ida e volta${aq}.${ms >= 4000 ? ' Resposta lenta: o envio funciona, mas cada emissão pode demorar mais.' : ''}` });
@@ -1472,10 +1488,10 @@ const Admin = {
       const ws = wb.addWorksheet('Planilha1', { views: [{ state: 'frozen', ySplit: 1 }] });
       ws.columns = [
         { header: 'Nome', key: 'nome', width: 46 },
-        { header: 'CPF', key: 'cpf', width: 20 },
-        { header: 'Data de Nascimento', key: 'nasc', width: 30 },
+        { header: 'CPF', key: 'cpf', width: 22 },
+        { header: 'Data de Nascimento', key: 'nasc', width: 40 },
         { header: 'e-mail', key: 'email', width: 40 },
-        { header: 'Telefone', key: 'tel', width: 22 }
+        { header: 'Telefone', key: 'tel', width: 24 }
       ];
       const cab = ws.getRow(1);
       cab.height = 30;
