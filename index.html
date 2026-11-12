@@ -1508,7 +1508,7 @@ const Admin = {
 
   /**
    * Lista de participantes no layout da planilha modelo (dados_participantes.xlsx):
-   * colunas Nome · CPF · Data de Nascimento · e-mail · Telefone; cabeçalho em negrito,
+   * colunas Nome · CPF · Data de Nascimento · e-mail · Telefone (+ Curso, ao final); cabeçalho em negrito,
    * Aptos Narrow 22, fundo azul-claro, centralizado, borda fina. Um participante por linha, em ordem alfabética.
    */
   async exportarListaXLSX(botao) {
@@ -1529,7 +1529,8 @@ const Admin = {
         { header: 'CPF', key: 'cpf', width: 22 },
         { header: 'Data de Nascimento', key: 'nasc', width: 40 },
         { header: 'e-mail', key: 'email', width: 40 },
-        { header: 'Telefone', key: 'tel', width: 24 }
+        { header: 'Telefone', key: 'tel', width: 24 },
+        { header: 'Curso', key: 'curso', width: 30 }
       ];
       const cab = ws.getRow(1);
       cab.height = 30;
@@ -1547,7 +1548,8 @@ const Admin = {
           cpf: p.cpf || '',
           nasc: m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : '',
           email: p.email,
-          tel: p.telefone || ''
+          tel: p.telefone || '',
+          curso: p.curso || ''
         });
         row.font = { name: 'Aptos Narrow', size: 11 };
         row.getCell('nasc').numFmt = 'dd/mm/yyyy';
@@ -1555,7 +1557,7 @@ const Admin = {
         row.getCell('cpf').alignment = { horizontal: 'center' };
         row.getCell('tel').alignment = { horizontal: 'center' };
       });
-      ws.autoFilter = { from: 'A1', to: `E${lista.length + 1}` };
+      ws.autoFilter = { from: 'A1', to: `F${lista.length + 1}` };
       const buf = await wb.xlsx.writeBuffer();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
