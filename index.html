@@ -181,6 +181,75 @@
 </div>
 
 <!-- ===================================================================== -->
+<!--  INSCRIÇÃO EM OFICINAS (link público: ?inscricao)                      -->
+<!-- ===================================================================== -->
+<div id="view-inscricao" hidden class="min-h-screen flex flex-col">
+  <header class="bg-ulbra-900 text-white">
+    <div class="max-w-lg mx-auto px-4 pt-5 pb-14">
+      <p class="text-xs uppercase tracking-[0.18em] text-ulbra-100/80">ILES/ULBRA Itumbiara</p>
+      <h1 class="text-lg font-semibold mt-1">Inscrição em oficinas</h1>
+    </div>
+  </header>
+  <main class="flex-1 max-w-lg w-full mx-auto px-4 -mt-10 pb-10">
+    <section id="in-carregando" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+      <div class="skeleton h-5 w-2/3 rounded mb-4"></div>
+      <div class="skeleton h-14 w-full rounded-xl mb-2"></div>
+      <div class="skeleton h-14 w-full rounded-xl mb-2"></div>
+      <div class="skeleton h-11 w-full rounded-lg"></div>
+      <p class="text-xs text-slate-400 mt-4 text-center">Carregando oficinas…</p>
+    </section>
+
+    <section id="in-aviso" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+      <h2 id="in-aviso-titulo" class="text-lg font-semibold text-slate-900"></h2>
+      <p id="in-aviso-texto" class="text-sm text-slate-600 mt-2 leading-relaxed"></p>
+      <button id="in-aviso-retry" class="mt-6 w-full h-11 rounded-lg bg-ulbra-900 text-white font-medium">Tentar novamente</button>
+    </section>
+
+    <form id="in-form" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5" novalidate>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-700">Escolha a oficina</span>
+          <button type="button" id="in-atualizar" class="text-xs text-ulbra-600 font-medium">Atualizar vagas</button>
+        </div>
+        <div id="in-oficinas" class="space-y-2" role="radiogroup"></div>
+        <p class="erro text-xs text-red-600 mt-1" data-for="in-oficina" hidden></p>
+      </div>
+      <div>
+        <label for="in-nome" class="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+        <input id="in-nome" type="text" autocomplete="name" autocapitalize="words" maxlength="120" class="w-full h-11 px-3 rounded-lg border border-slate-300 focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100" placeholder="Por extenso, sem abreviações">
+        <p class="erro text-xs text-red-600 mt-1" data-for="in-nome" hidden></p>
+      </div>
+      <div>
+        <label for="in-curso" class="block text-sm font-medium text-slate-700 mb-1">Curso</label>
+        <select id="in-curso" class="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white focus:border-ulbra-600 focus:ring-2 focus:ring-ulbra-100">
+          <option value="">Selecione…</option>
+        </select>
+        <p class="erro text-xs text-red-600 mt-1" data-for="in-curso" hidden></p>
+      </div>
+      <div id="in-erro-geral" hidden class="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg p-3"></div>
+      <button id="in-enviar" type="submit" class="w-full h-12 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
+        <span>Confirmar inscrição</span>
+      </button>
+      <p class="text-[11px] text-slate-400 text-center">Inscrições exclusivas para alunos do ILES/ULBRA.</p>
+    </form>
+
+    <section id="in-sucesso" hidden class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+      <div class="mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2 id="in-sucesso-titulo" class="text-lg font-semibold text-slate-900"></h2>
+      <p id="in-sucesso-texto" class="text-sm text-slate-600 mt-2 leading-relaxed"></p>
+      <p class="text-xs text-slate-400 mt-3">Tire um print desta tela como comprovante.</p>
+      <button id="in-outra" class="mt-6 w-full h-11 rounded-lg border border-slate-300 text-slate-700 font-medium">Fazer outra inscrição</button>
+    </section>
+  </main>
+  <footer class="text-center text-[11px] text-slate-400 pb-6 px-4 space-y-0.5">
+    <p>Instituto Luterano de Ensino Superior de Itumbiara – ILES/ULBRA</p>
+    <p>Desenvolvido por Roger A. Luz</p>
+  </footer>
+</div>
+
+<!-- ===================================================================== -->
 <!--  MÓDULO DA ORGANIZAÇÃO – LOGIN                                        -->
 <!-- ===================================================================== -->
 <div id="view-login" hidden class="min-h-screen flex flex-col items-center justify-center gap-6 p-4 bg-ulbra-900">
@@ -213,11 +282,12 @@
       </div>
       <button id="btn-sair" class="text-sm text-ulbra-100 hover:text-white">Sair</button>
     </div>
-    <nav class="max-w-6xl mx-auto px-4">
-      <div class="inline-flex gap-1 bg-ulbra-800 p-1 rounded-t-xl">
+    <nav class="max-w-6xl mx-auto px-4 overflow-x-auto">
+      <div class="inline-flex gap-1 bg-ulbra-800 p-1 rounded-t-xl whitespace-nowrap">
         <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="eventos">Eventos</button>
         <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="diagnostico">Diagnóstico &amp; QR Code</button>
         <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="auditoria">Auditoria</button>
+        <button class="tab px-4 py-2 rounded-lg text-sm font-medium text-ulbra-100" data-tab="oficinas">Oficinas</button>
       </div>
     </nav>
   </header>
@@ -341,6 +411,31 @@
         </table>
       </div>
     </section>
+
+    <!-- ============ ABA OFICINAS ============ -->
+    <section id="tab-oficinas" class="tab-painel" hidden>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Oficinas</h2>
+          <p class="text-sm text-slate-500">Inscrições com vagas limitadas, só para alunos. Não emite certificado.</p>
+        </div>
+        <button id="btn-nova-oficina" class="h-10 px-4 rounded-lg bg-ulbra-900 text-white text-sm font-medium">+ Nova oficina</button>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-4 flex flex-wrap items-center gap-4">
+        <div id="of-qr" class="shrink-0 w-24 h-24 bg-white"></div>
+        <div class="flex-1 min-w-[240px]">
+          <p class="text-sm font-medium text-slate-800">Link único de inscrição</p>
+          <p class="text-xs text-slate-500 mb-2">Mostra todas as oficinas com inscrições abertas e as vagas restantes.</p>
+          <div class="flex gap-2">
+            <input id="of-url" readonly class="flex-1 min-w-0 h-9 px-2 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600">
+            <button id="of-copiar" class="h-9 px-3 rounded-lg border border-slate-300 text-xs font-medium">Copiar</button>
+            <button id="of-baixar-qr" class="h-9 px-3 rounded-lg border border-slate-300 text-xs font-medium">Baixar QR</button>
+            <button id="of-cartaz" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-xs font-medium">Imprimir cartaz</button>
+          </div>
+        </div>
+      </div>
+      <div id="lista-oficinas" class="grid gap-3 md:grid-cols-2"></div>
+    </section>
   </main>
   <footer class="max-w-6xl mx-auto px-4 pb-6 pt-2 text-[11px] text-slate-400 flex flex-wrap justify-between gap-2">
     <span>Instituto Luterano de Ensino Superior de Itumbiara – ILES/ULBRA</span>
@@ -414,6 +509,77 @@
         <button type="submit" id="btn-ev-salvar" class="h-10 px-5 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Salvar evento</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: OFICINA ===================== -->
+<div id="modal-oficina" hidden class="fixed inset-0 z-40 bg-slate-900/50 overflow-y-auto">
+  <div class="min-h-full flex items-start justify-center p-4">
+    <form id="form-oficina" class="w-full max-w-md bg-white rounded-2xl shadow-xl my-6" novalidate>
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="mo-titulo" class="text-lg font-semibold text-slate-900">Nova oficina</h3>
+        <button type="button" class="fechar-oficina text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Fechar">×</button>
+      </div>
+      <div class="p-6 space-y-3">
+        <input type="hidden" id="of-id">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1" for="of-nome">Nome da oficina</label>
+          <input id="of-nome" maxlength="150" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1" for="of-vagas">Quantidade de vagas</label>
+          <div class="flex items-center gap-2">
+            <button type="button" id="of-menos" class="w-10 h-10 rounded-lg border border-slate-300 text-lg font-semibold text-slate-700" aria-label="Diminuir vagas">−</button>
+            <input id="of-vagas" type="number" inputmode="numeric" min="1" max="500" step="1" class="w-24 h-10 px-3 rounded-lg border border-slate-300 text-center text-base font-semibold">
+            <button type="button" id="of-mais" class="w-10 h-10 rounded-lg border border-slate-300 text-lg font-semibold text-slate-700" aria-label="Aumentar vagas">+</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-2" id="of-presets">
+            <button type="button" data-v="10" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">10</button>
+            <button type="button" data-v="15" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">15</button>
+            <button type="button" data-v="20" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">20</button>
+            <button type="button" data-v="25" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">25</button>
+            <button type="button" data-v="30" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">30</button>
+            <button type="button" data-v="40" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">40</button>
+            <button type="button" data-v="50" class="px-2.5 py-1 rounded-md bg-ulbra-50 text-ulbra-800 text-xs font-medium">50</button>
+          </div>
+          <p id="of-vagas-dica" class="text-[11px] text-slate-400 mt-1.5">De 1 a 500 vagas.</p>
+        </div>
+        <p id="of-erro" hidden class="text-sm text-red-600"></p>
+      </div>
+      <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" class="fechar-oficina h-10 px-4 rounded-lg border border-slate-300 text-sm font-medium">Cancelar</button>
+        <button type="submit" id="of-salvar" class="h-10 px-5 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: INSCRITOS ===================== -->
+<div id="modal-inscritos" hidden class="fixed inset-0 z-40 bg-slate-900/50 overflow-y-auto">
+  <div class="min-h-full flex items-start justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl my-6">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h3 id="mi-titulo" class="text-lg font-semibold text-slate-900 truncate"></h3>
+          <p id="mi-sub" class="text-xs text-slate-500"></p>
+        </div>
+        <button type="button" id="mi-fechar" class="text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Fechar">×</button>
+      </div>
+      <div class="px-6 pt-4 flex flex-wrap gap-2">
+        <button id="mi-atualizar" class="h-9 px-3 rounded-lg border border-slate-300 text-sm font-medium">Atualizar</button>
+        <button id="mi-xlsx" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-sm font-medium flex items-center gap-2">Lista de inscritos (.xlsx)</button>
+      </div>
+      <div class="p-6 pt-4">
+        <div class="border border-slate-200 rounded-xl overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr><th class="px-3 py-2">#</th><th class="px-3 py-2">Nome</th><th class="px-3 py-2">Curso</th><th class="px-3 py-2">Inscrição</th><th class="px-3 py-2"></th></tr>
+            </thead>
+            <tbody id="mi-tabela" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -504,7 +670,7 @@
 const CONFIG = {
   // URL do Web App publicado no Apps Script (termina em /exec)
   // Versão mínima do Código.gs que este site exige (campos CPF/nascimento/telefone e encerramento)
-  VERSAO_BACKEND_MIN: '1.2.1',
+  VERSAO_BACKEND_MIN: '1.3.0',
   API_URL: 'https://script.google.com/macros/s/AKfycbzKCRBBWl5iBVDp8WszkhPcgy_joyIosKyR8-bbT5oK-ADSFGBOee_p3ZT1NUkNBcGckg/exec',
   // Deixe vazio para usar o endereço desta página (GitHub Pages) no QR Code
   BASE_URL: '',
@@ -558,7 +724,7 @@ function versaoAtende(v) {
 const soDigitos = (s) => String(s || '').replace(/\D/g, '');
 const CONECTIVOS_NOME = ['da', 'das', 'de', 'do', 'dos', 'e', 'di', 'du', 'del', 'van', 'von'];
 function validarNomeCompleto(nome) {
-  if (nome.length < 5 || nome.length > 120) return 'Informe seu nome completo, como deve sair no certificado.';
+  if (nome.length < 5 || nome.length > 120) return 'Informe seu nome completo (nome e sobrenome).';
   if (/[^A-Za-zÀ-ÖØ-öø-ÿ' -]/.test(nome)) return 'O nome deve ter apenas letras (sem números, pontos ou símbolos).';
   const partes = nome.split(' ').filter((p) => !CONECTIVOS_NOME.includes(p.toLowerCase()));
   if (partes.length < 2) return 'Informe nome e sobrenome completos.';
@@ -683,7 +849,8 @@ const params = new URLSearchParams(location.search);
 const EVENTO_ID = (params.get('evento') || '').trim().toUpperCase();
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (EVENTO_ID) Aluno.iniciar();
+  if (params.has('inscricao')) Inscricao.iniciar();
+  else if (EVENTO_ID) Aluno.iniciar();
   else Admin.iniciar();
 });
 
@@ -881,6 +1048,113 @@ const Aluno = {
   }
 };
 
+/** QR Code em PNG com margem branca (zona de silêncio) para leitura confiável. */
+function qrPng(texto, tamanho) {
+  const tmp = document.createElement('div');
+  new QRCode(tmp, { text: texto, width: tamanho, height: tamanho, correctLevel: QRCode.CorrectLevel.M });
+  const cv = tmp.querySelector('canvas');
+  const m = Math.round(tamanho * 0.08), out = document.createElement('canvas');
+  out.width = out.height = tamanho + m * 2;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(cv, m, m);
+  return out.toDataURL('image/png');
+}
+
+/* ==========================================================================
+   INSCRIÇÃO EM OFICINAS (página pública ?inscricao)
+   ========================================================================== */
+const Inscricao = {
+  oficinas: [],
+  escolhida: '',
+
+  iniciar() {
+    $('view-inscricao').hidden = false;
+    document.title = 'Inscrição em oficinas – ILES/ULBRA';
+    $('in-form').onsubmit = (e) => { e.preventDefault(); this.enviar(); };
+    $('in-aviso-retry').onclick = () => this.carregar();
+    $('in-atualizar').onclick = () => this.carregar(true);
+    $('in-outra').onclick = () => { $('in-nome').value = ''; this.escolhida = ''; this.carregar(); };
+    $('in-nome').addEventListener('input', () => Aluno.limparErro('in-nome'));
+    $('in-nome').addEventListener('blur', () => this.validar('in-nome'));
+    $('in-curso').addEventListener('change', () => Aluno.limparErro('in-curso'));
+    this.carregar();
+  },
+
+  mostrar(sec) { ['in-carregando', 'in-aviso', 'in-form', 'in-sucesso'].forEach((s) => { $(s).hidden = s !== sec; }); },
+
+  aviso(titulo, texto, retry = true) {
+    $('in-aviso-titulo').textContent = titulo;
+    $('in-aviso-texto').textContent = texto;
+    $('in-aviso-retry').hidden = !retry;
+    this.mostrar('in-aviso');
+  },
+
+  async carregar(manterForm) {
+    if (!manterForm) this.mostrar('in-carregando');
+    if (!apiConfigurada()) return this.aviso('Sistema em configuração', 'As inscrições ainda não foram ativadas. Procure a organização.', false);
+    let r = null;
+    for (let t = 1; t <= 2 && !r; t++) {
+      try { r = await apiGet({ action: 'oficinas' }, CONFIG.TIMEOUT_HEALTH_MS); }
+      catch (e) { if (t === 2) return this.aviso('Serviço temporariamente indisponível', 'Não conseguimos carregar as oficinas agora. Aguarde um instante e toque em "Tentar novamente".'); await new Promise((ok) => setTimeout(ok, 1500)); }
+    }
+    if (!versaoAtende(r.versao)) return this.aviso('Sistema em atualização', 'As inscrições estão passando por uma atualização. Tente novamente em alguns minutos.');
+    this.oficinas = r.oficinas;
+    if (!this.oficinas.length) return this.aviso('Nenhuma oficina com inscrições abertas', 'No momento não há oficinas recebendo inscrições. Confira os avisos da coordenação.', true);
+    const sel = $('in-curso'), cursoAtual = sel.value;
+    sel.innerHTML = '<option value="">Selecione…</option>' + r.cursos.map((c) => `<option>${esc(c)}</option>`).join('');
+    sel.value = cursoAtual;
+    this.renderOficinas();
+    this.mostrar('in-form');
+  },
+
+  renderOficinas() {
+    const box = $('in-oficinas');
+    if (this.escolhida && !this.oficinas.some((o) => o.id === this.escolhida && o.restantes > 0)) this.escolhida = '';
+    box.innerHTML = this.oficinas.map((o) => {
+      const lotada = o.restantes <= 0, sel = this.escolhida === o.id;
+      const vagas = lotada ? '<span class="text-xs font-semibold text-red-600">Lotada</span>'
+        : `<span class="text-xs font-semibold ${o.restantes <= 5 ? 'text-amber-600' : 'text-emerald-700'}">${o.restantes} vaga${o.restantes > 1 ? 's' : ''}</span>`;
+      return `<label class="flex items-center gap-3 rounded-xl border p-3 ${lotada ? 'border-slate-200 bg-slate-50 opacity-60' : sel ? 'border-ulbra-600 ring-2 ring-ulbra-100 bg-ulbra-50' : 'border-slate-300 cursor-pointer'}">
+        <input type="radio" name="in-oficina" value="${esc(o.id)}" ${lotada ? 'disabled' : ''} ${sel ? 'checked' : ''} class="w-4 h-4 accent-[#0b2545]">
+        <span class="flex-1 min-w-0 text-sm font-medium text-slate-800">${esc(o.nome)}</span>${vagas}
+      </label>`;
+    }).join('');
+    box.querySelectorAll('input[name="in-oficina"]').forEach((i) => {
+      i.onchange = () => { this.escolhida = i.value; Aluno.limparErro('in-oficina'); this.renderOficinas(); };
+    });
+  },
+
+  validar(id) {
+    Aluno.limparErro(id);
+    if (id === 'in-nome') { const m = validarNomeCompleto($('in-nome').value.trim().replace(/\s+/g, ' ')); if (m) return Aluno.erro(id, m), false; }
+    if (id === 'in-curso' && !$('in-curso').value) return Aluno.erro(id, 'Selecione seu curso.'), false;
+    if (id === 'in-oficina' && !this.escolhida) return Aluno.erro(id, 'Escolha uma oficina com vagas.'), false;
+    return true;
+  },
+
+  async enviar() {
+    $('in-erro-geral').hidden = true;
+    const ok = ['in-oficina', 'in-nome', 'in-curso'].map((c) => this.validar(c)).every(Boolean);
+    if (!ok) return;
+    const btn = $('in-enviar');
+    carregando(btn, true, 'Confirmando…');
+    try {
+      const r = await apiPost({ action: 'inscreverOficina', dados: { nome: $('in-nome').value.trim().replace(/\s+/g, ' '), curso: $('in-curso').value, oficinaId: this.escolhida } }, 60000);
+      $('in-sucesso-titulo').textContent = r.duplicado ? 'Você já estava inscrito(a)' : 'Inscrição confirmada!';
+      $('in-sucesso-texto').textContent = r.duplicado ? r.mensagem : `${r.nome}, sua vaga na oficina "${r.oficina}" está garantida.`;
+      this.mostrar('in-sucesso');
+    } catch (e) {
+      const g = $('in-erro-geral');
+      g.textContent = (e.codigo === 'TIMEOUT' || e.codigo === 'REDE')
+        ? 'Não recebemos a confirmação. Toque em "Confirmar inscrição" de novo: se a inscrição já tiver sido feita, o sistema reconhece e não duplica.'
+        : e.message;
+      g.hidden = false;
+      if (['LOTADA', 'FECHADA', 'OFICINA'].includes(e.codigo)) this.carregar(true);
+    } finally { carregando(btn, false); }
+  }
+};
+
 /** Carrega o ExcelJS só quando a organização exporta a lista (não pesa na página do aluno). */
 function carregarExcelJS() {
   if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
@@ -1026,6 +1300,16 @@ const Admin = {
     $('mv-fechar').onclick = () => this.fecharVisualizador();
     $('modal-visual').onclick = (e) => { if (e.target.id === 'modal-visual') this.fecharVisualizador(); };
 
+    $('btn-nova-oficina').onclick = () => this.abrirFormOficina();
+    document.querySelectorAll('.fechar-oficina').forEach((b) => { b.onclick = () => { $('modal-oficina').hidden = true; }; });
+    $('form-oficina').onsubmit = (e) => { e.preventDefault(); this.salvarOficina(); };
+    $('mi-fechar').onclick = () => { $('modal-inscritos').hidden = true; this.carregarOficinas(); };
+    $('mi-atualizar').onclick = () => this.carregarInscritos();
+    $('mi-xlsx').onclick = () => this.exportarInscritosXLSX();
+    $('of-copiar').onclick = () => { navigator.clipboard?.writeText($('of-url').value).then(() => toast('Link copiado.', 'ok')); };
+    $('of-baixar-qr').onclick = () => { const a = document.createElement('a'); a.href = qrPng(this.urlInscricao(), 1024); a.download = 'QRCode_inscricao_oficinas.png'; a.click(); };
+    $('of-cartaz').onclick = () => this.imprimirCartazOficinas();
+
     $('dg-destino').value = this.emailOrganizador;
     this.aba('eventos');
     this.carregarEventos();
@@ -1039,6 +1323,7 @@ const Admin = {
     });
     document.querySelectorAll('.tab-painel').forEach((p) => { p.hidden = p.id !== 'tab-' + nome; });
     if (nome === 'auditoria') this.carregarParticipantes();
+    if (nome === 'oficinas') this.carregarOficinas();
     if (nome === 'diagnostico') this.renderQR();
   },
 
@@ -1359,6 +1644,224 @@ const Admin = {
     alvo.innerHTML = '';
     if (typeof QRCode === 'undefined') { alvo.textContent = 'Biblioteca de QR Code não carregou (verifique a internet).'; return; }
     new QRCode(alvo, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+  },
+
+  /* ---------- oficinas ---------- */
+  urlInscricao() { return this.baseUrl().split('?')[0] + '?inscricao'; },
+
+  async carregarOficinas() {
+    const url = this.urlInscricao();
+    $('of-url').value = url;
+    const alvo = $('of-qr');
+    if (!alvo.dataset.url || alvo.dataset.url !== url) {
+      alvo.innerHTML = ''; alvo.dataset.url = url;
+      if (typeof QRCode !== 'undefined') new QRCode(alvo, { text: url, width: 96, height: 96, correctLevel: QRCode.CorrectLevel.M });
+    }
+    const lista = $('lista-oficinas');
+    if (!this.oficinas) lista.innerHTML = '<div class="skeleton h-32 rounded-2xl"></div><div class="skeleton h-32 rounded-2xl"></div>';
+    try {
+      const r = await this.api({ action: 'listarOficinas' }, 60000);
+      this.oficinas = r.oficinas;
+      this.renderOficinas();
+    } catch (e) {
+      lista.innerHTML = `<div class="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">${esc(e.message)}</div>`;
+    }
+  },
+
+  renderOficinas() {
+    const lista = $('lista-oficinas');
+    if (!this.oficinas.length) {
+      lista.innerHTML = '<div class="md:col-span-2 bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-sm text-slate-500">Nenhuma oficina cadastrada. Clique em <b>+ Nova oficina</b>.</div>';
+      return;
+    }
+    lista.innerHTML = this.oficinas.map((o) => {
+      const pct = Math.min(100, Math.round((o.inscritos / o.vagas) * 100));
+      const lotada = o.inscritos >= o.vagas;
+      const cor = lotada ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500';
+      const selo = !o.inscricoes_abertas ? '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-medium">Inscrições fechadas</span>'
+        : lotada ? '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">Lotada</span>'
+        : '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">Inscrições abertas</span>';
+      return `<article class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col">
+        <div class="flex items-start justify-between gap-2"><h3 class="font-semibold text-slate-900 leading-snug">${esc(o.nome)}</h3>${selo}</div>
+        <p class="text-xs text-slate-500 mt-1">ID <span class="font-mono">${esc(o.id)}</span></p>
+        <div class="mt-3">
+          <div class="flex justify-between text-sm"><span class="text-slate-700"><b>${o.inscritos}</b> de ${o.vagas} vagas · <button data-of="vagas" data-id="${esc(o.id)}" class="text-ulbra-600 font-medium hover:underline">alterar</button></span><span class="text-slate-500">${Math.max(0, o.vagas - o.inscritos)} restante(s)</span></div>
+          <div class="h-2 rounded-full bg-slate-100 mt-1 overflow-hidden"><div class="h-2 ${cor}" style="width:${pct}%"></div></div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+          <button data-of="inscritos" data-id="${esc(o.id)}" class="h-9 px-3 rounded-lg bg-ulbra-900 text-white text-sm">Inscritos</button>
+          <button data-of="editar" data-id="${esc(o.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">Editar</button>
+          <button data-of="alternar" data-id="${esc(o.id)}" class="h-9 px-3 rounded-lg border border-slate-300 text-sm">${o.inscricoes_abertas ? 'Fechar inscrições' : 'Reabrir inscrições'}</button>
+          <button data-of="excluir" data-id="${esc(o.id)}" class="h-9 px-3 rounded-lg text-red-700 text-sm hover:bg-red-50 ml-auto">Excluir</button>
+        </div>
+      </article>`;
+    }).join('');
+    lista.querySelectorAll('button[data-of]').forEach((b) => {
+      const o = this.oficinas.find((x) => x.id === b.dataset.id);
+      b.onclick = () => {
+        if (b.dataset.of === 'inscritos') this.abrirInscritos(o);
+        if (b.dataset.of === 'editar') this.abrirFormOficina(o);
+        if (b.dataset.of === 'vagas') this.abrirFormOficina(o, true);
+        if (b.dataset.of === 'alternar') this.alternarOficina(o, b);
+        if (b.dataset.of === 'excluir') this.excluirOficina(o);
+      };
+    });
+  },
+
+  abrirFormOficina(o, focoVagas) {
+    $('mo-titulo').textContent = o ? 'Editar oficina' : 'Nova oficina';
+    $('of-id').value = o ? o.id : '';
+    $('of-nome').value = o ? o.nome : '';
+    $('of-vagas').value = o ? o.vagas : 20;
+    this._minVagas = o ? Math.max(1, o.inscritos || 0) : 1;
+    $('of-vagas').min = this._minVagas;
+    $('of-vagas-dica').textContent = o && o.inscritos
+      ? `Mínimo ${this._minVagas}: a oficina já tem ${o.inscritos} inscrito(s). Máximo 500.`
+      : 'De 1 a 500 vagas.';
+    const ajustar = (v) => { $('of-vagas').value = Math.min(500, Math.max(this._minVagas, parseInt(v, 10) || this._minVagas)); this.marcarPreset(); };
+    $('of-menos').onclick = () => ajustar((parseInt($('of-vagas').value, 10) || 0) - 1);
+    $('of-mais').onclick = () => ajustar((parseInt($('of-vagas').value, 10) || 0) + 1);
+    $('of-vagas').oninput = () => this.marcarPreset();
+    document.querySelectorAll('#of-presets button').forEach((b) => {
+      b.disabled = Number(b.dataset.v) < this._minVagas;
+      b.classList.toggle('opacity-40', b.disabled);
+      b.onclick = () => ajustar(b.dataset.v);
+    });
+    this.marcarPreset();
+    $('of-erro').hidden = true;
+    $('modal-oficina').hidden = false;
+    if (focoVagas) { $('of-vagas').focus(); $('of-vagas').select(); } else $('of-nome').focus();
+  },
+
+  marcarPreset() {
+    const v = String(parseInt($('of-vagas').value, 10));
+    document.querySelectorAll('#of-presets button').forEach((b) => {
+      const ativo = b.dataset.v === v;
+      b.classList.toggle('bg-ulbra-900', ativo); b.classList.toggle('text-white', ativo);
+      b.classList.toggle('bg-ulbra-50', !ativo); b.classList.toggle('text-ulbra-800', !ativo);
+    });
+  },
+
+  async salvarOficina() {
+    const btn = $('of-salvar');
+    $('of-erro').hidden = true;
+    carregando(btn, true, 'Salvando…');
+    try {
+      await this.api({ action: 'salvarOficina', oficina: { id: $('of-id').value || undefined, nome: $('of-nome').value, vagas: $('of-vagas').value } }, 60000);
+      $('modal-oficina').hidden = true;
+      toast('Oficina salva.', 'ok');
+      this.carregarOficinas();
+    } catch (e) { $('of-erro').textContent = e.message; $('of-erro').hidden = false; }
+    finally { carregando(btn, false); }
+  },
+
+  async alternarOficina(o, btn) {
+    carregando(btn, true);
+    try {
+      await this.api({ action: 'alternarOficina', oficinaId: o.id, abertas: !o.inscricoes_abertas }, 30000);
+      toast(o.inscricoes_abertas ? 'Inscrições fechadas: a oficina sai da página de inscrição.' : 'Inscrições reabertas.', 'ok');
+      this.carregarOficinas();
+    } catch (e) { toast(e.message, 'erro'); carregando(btn, false); }
+  },
+
+  async excluirOficina(o) {
+    const conf = prompt(`Excluir a oficina "${o.nome}" e as ${o.inscritos} inscrição(ões) dela? Não dá para desfazer.\n\nBaixe antes a lista de inscritos, se precisar.\n\nPara confirmar, digite o ID: ${o.id}`);
+    if (conf === null) return;
+    try {
+      const r = await this.api({ action: 'excluirOficina', oficinaId: o.id, confirmacao: conf }, 60000);
+      toast(`Oficina excluída (${r.removidas} inscrição(ões) apagada(s)).`, 'ok');
+      this.carregarOficinas();
+    } catch (e) { toast(e.message, 'erro', 6000); }
+  },
+
+  abrirInscritos(o) {
+    this.oficinaAtual = o;
+    $('mi-titulo').textContent = o.nome;
+    $('mi-tabela').innerHTML = `<tr><td colspan="5" class="px-3 py-6"><div class="flex justify-center text-slate-400">${SPIN}</div></td></tr>`;
+    $('modal-inscritos').hidden = false;
+    this.carregarInscritos();
+  },
+
+  async carregarInscritos() {
+    const o = this.oficinaAtual;
+    try {
+      const r = await this.api({ action: 'listarInscricoes', oficinaId: o.id }, 60000);
+      this.inscritos = r.inscricoes;
+      $('mi-sub').textContent = `${this.inscritos.length} de ${o.vagas} vagas preenchidas · ID ${o.id}`;
+      const tb = $('mi-tabela');
+      if (!this.inscritos.length) { tb.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Nenhum inscrito ainda.</td></tr>'; return; }
+      tb.innerHTML = this.inscritos.map((p, i) => `<tr>
+        <td class="px-3 py-2 text-slate-400">${i + 1}</td>
+        <td class="px-3 py-2 font-medium text-slate-800">${esc(p.nome)}</td>
+        <td class="px-3 py-2 text-slate-600">${esc(p.curso)}</td>
+        <td class="px-3 py-2 text-slate-500 whitespace-nowrap">${esc(dataHora(p.registrado_em))}</td>
+        <td class="px-3 py-2 text-right"><button data-rem="${i}" class="h-8 px-3 rounded-lg text-xs text-red-700 hover:bg-red-50">Remover</button></td>
+      </tr>`).join('');
+      tb.querySelectorAll('[data-rem]').forEach((b) => { b.onclick = () => this.removerInscrito(this.inscritos[Number(b.dataset.rem)], b); });
+    } catch (e) {
+      $('mi-tabela').innerHTML = `<tr><td colspan="5" class="px-3 py-6 text-center text-red-600">${esc(e.message)}</td></tr>`;
+    }
+  },
+
+  async removerInscrito(p, btn) {
+    if (!confirm(`Remover a inscrição de ${p.nome}? A vaga fica livre para outra pessoa.`)) return;
+    carregando(btn, true);
+    try {
+      await this.api({ action: 'removerInscricao', linha: p.linha, chave: p.chave }, 30000);
+      toast('Inscrição removida.', 'ok');
+    } catch (e) { toast(e.message, 'erro', 6000); }
+    this.carregarInscritos();
+  },
+
+  /** Lista de inscritos no mesmo padrão visual da lista de participantes: Nome · Curso · Oficina. */
+  async exportarInscritosXLSX() {
+    const o = this.oficinaAtual;
+    if (!this.inscritos || !this.inscritos.length) return toast('Nenhum inscrito para exportar.', 'alerta');
+    const btn = $('mi-xlsx');
+    carregando(btn, true, 'Gerando…');
+    try {
+      const ExcelJS = await carregarExcelJS();
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Planilha1', { views: [{ state: 'frozen', ySplit: 1 }] });
+      ws.columns = [{ header: 'Nome', key: 'nome', width: 46 }, { header: 'Curso', key: 'curso', width: 30 }, { header: 'Oficina', key: 'oficina', width: 46 }];
+      ws.getRow(1).height = 30;
+      ws.getRow(1).eachCell((c) => {
+        c.font = { name: 'Aptos Narrow', size: 22, bold: true };
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCEAF7' } };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+        c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+      [...this.inscritos].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }))
+        .forEach((p) => { ws.addRow({ nome: p.nome, curso: p.curso, oficina: o.nome }).font = { name: 'Aptos Narrow', size: 11 }; });
+      ws.autoFilter = { from: 'A1', to: `C${this.inscritos.length + 1}` };
+      const buf = await wb.xlsx.writeBuffer();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const slug = String(o.nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+      a.download = `inscritos_${slug || o.id}.xlsx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast(`${this.inscritos.length} inscrito(s) exportado(s).`, 'ok');
+    } catch (e) { toast('Não foi possível gerar a planilha: ' + e.message, 'erro', 6000); }
+    finally { carregando(btn, false); }
+  },
+
+  imprimirCartazOficinas() {
+    const w = window.open('', '_blank');
+    if (!w) return toast('Permita pop-ups para imprimir o cartaz.', 'alerta');
+    const abertas = (this.oficinas || []).filter((o) => o.inscricoes_abertas);
+    const url = this.urlInscricao();
+    w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Inscrição em oficinas</title>
+      <style>@page{size:A4;margin:18mm}body{font-family:Arial,sans-serif;text-align:center;color:#0b2545}
+      h1{font-size:30px;margin:0 0 6px}p.sub{font-size:16px;margin:0 0 22px;color:#334155}img{width:110mm;height:110mm}
+      ul{text-align:left;display:inline-block;font-size:15px;line-height:1.7;color:#1e293b;margin-top:14px}
+      .tag{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#64748b}.url{font-size:11px;color:#64748b;word-break:break-all;margin-top:14px}</style></head>
+      <body><p class="tag">ILES/ULBRA Itumbiara</p><h1>Inscreva-se nas oficinas</h1><p class="sub">Vagas limitadas · exclusivo para alunos</p>
+      <img src="${qrPng(url, 900)}" alt="QR Code">
+      ${abertas.length ? `<br><ul>${abertas.map((o) => `<li>${esc(o.nome)} (${o.vagas} vagas)</li>`).join('')}</ul>` : ''}
+      <p class="url">${esc(url)}</p>
+      <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+    w.document.close();
   },
 
   qrDataUrl(tamanho = 1024) {
