@@ -527,6 +527,10 @@
           <input id="of-nome" maxlength="150" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
         </div>
         <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1" for="of-data">Data da oficina</label>
+          <input id="of-data" type="date" class="w-44 h-10 px-3 rounded-lg border border-slate-300 text-sm">
+        </div>
+        <div>
           <label class="block text-xs font-medium text-slate-600 mb-1" for="of-ministrante">Nome do ministrante</label>
           <input id="of-ministrante" maxlength="120" autocapitalize="words" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" placeholder="Ex.: Prof. Dr. João da Silva">
         </div>
@@ -678,7 +682,7 @@
 const CONFIG = {
   // URL do Web App publicado no Apps Script (termina em /exec)
   // Versão mínima do Código.gs que este site exige (campos CPF/nascimento/telefone e encerramento)
-  VERSAO_BACKEND_MIN: '1.4.0',
+  VERSAO_BACKEND_MIN: '1.5.0',
   API_URL: 'https://script.google.com/macros/s/AKfycbzKCRBBWl5iBVDp8WszkhPcgy_joyIosKyR8-bbT5oK-ADSFGBOee_p3ZT1NUkNBcGckg/exec',
   // Deixe vazio para usar o endereço desta página (GitHub Pages) no QR Code
   BASE_URL: '',
@@ -786,6 +790,13 @@ function validarTelefone(tel) {
   if (tel.length === 11 && tel[2] !== '9') return 'Celular deve começar com 9 após o DDD.';
   if (tel.length === 10 && !'2345'.includes(tel[2])) return 'Número incompleto: celulares têm 9 dígitos após o DDD.';
   return '';
+}
+/** "2026-11-20" → "20/11/2026 (sex.)" */
+function dataComSemana(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return '';
+  const dia = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'][new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()];
+  return `${m[3]}/${m[2]}/${m[1]} (${dia})`;
 }
 /** "1990-05-12" → "12/05/1990" */
 const isoParaBR = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
@@ -1125,7 +1136,7 @@ const Inscricao = {
         : `<span class="text-xs font-semibold ${o.restantes <= 5 ? 'text-amber-600' : 'text-emerald-700'}">${o.restantes} vaga${o.restantes > 1 ? 's' : ''}</span>`;
       return `<label class="flex items-center gap-3 rounded-xl border p-3 ${lotada ? 'border-slate-200 bg-slate-50 opacity-60' : sel ? 'border-ulbra-600 ring-2 ring-ulbra-100 bg-ulbra-50' : 'border-slate-300 cursor-pointer'}">
         <input type="radio" name="in-oficina" value="${esc(o.id)}" ${lotada ? 'disabled' : ''} ${sel ? 'checked' : ''} class="w-4 h-4 accent-[#0b2545]">
-        <span class="flex-1 min-w-0"><span class="block text-sm font-medium text-slate-800">${esc(o.nome)}</span>${o.ministrante || o.curso ? `<span class="block text-xs text-slate-500 mt-0.5">${esc([o.ministrante ? 'Ministrante: ' + o.ministrante : '', o.curso].filter(Boolean).join(' · '))}</span>` : ''}</span>${vagas}
+        <span class="flex-1 min-w-0"><span class="block text-sm font-medium text-slate-800">${esc(o.nome)}</span>${o.data ? `<span class="block text-xs font-medium text-ulbra-700 mt-0.5">${esc(dataComSemana(o.data))}</span>` : ''}${o.ministrante || o.curso ? `<span class="block text-xs text-slate-500 mt-0.5">${esc([o.ministrante ? 'Ministrante: ' + o.ministrante : '', o.curso].filter(Boolean).join(' · '))}</span>` : ''}</span>${vagas}
       </label>`;
     }).join('');
     box.querySelectorAll('input[name="in-oficina"]').forEach((i) => {
@@ -1150,7 +1161,7 @@ const Inscricao = {
     try {
       const r = await apiPost({ action: 'inscreverOficina', dados: { nome: $('in-nome').value.trim().replace(/\s+/g, ' '), curso: $('in-curso').value, oficinaId: this.escolhida } }, 60000);
       $('in-sucesso-titulo').textContent = r.duplicado ? 'Você já estava inscrito(a)' : 'Inscrição confirmada!';
-      $('in-sucesso-texto').textContent = r.duplicado ? r.mensagem : `${r.nome}, sua vaga na oficina "${r.oficina}"${r.ministrante ? `, com ${r.ministrante},` : ''} está garantida.`;
+      $('in-sucesso-texto').textContent = r.duplicado ? r.mensagem : `${r.nome}, sua vaga na oficina "${r.oficina}"${r.data ? `, em ${dataComSemana(r.data)}` : ''}${r.ministrante ? `, com ${r.ministrante},` : ''} está garantida.`;
       this.mostrar('in-sucesso');
     } catch (e) {
       const g = $('in-erro-geral');
@@ -1692,7 +1703,8 @@ const Admin = {
         : '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">Inscrições abertas</span>';
       return `<article class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col">
         <div class="flex items-start justify-between gap-2"><h3 class="font-semibold text-slate-900 leading-snug">${esc(o.nome)}</h3>${selo}</div>
-        <p class="text-sm text-slate-600 mt-1">${o.ministrante ? `Ministrante: <b class="font-medium text-slate-800">${esc(o.ministrante)}</b>` : '<span class="text-amber-700">Ministrante não informado: clique em Editar</span>'}</p>
+        <p class="text-sm mt-1 ${o.data ? 'text-slate-700' : 'text-amber-700'}">${o.data ? `<b class="font-medium">${esc(dataExtenso(o.data))}</b>` : 'Data não informada: clique em Editar'}</p>
+        <p class="text-sm text-slate-600 mt-0.5">${o.ministrante ? `Ministrante: <b class="font-medium text-slate-800">${esc(o.ministrante)}</b>` : '<span class="text-amber-700">Ministrante não informado: clique em Editar</span>'}</p>
         <p class="text-xs text-slate-500 mt-0.5">${o.curso ? esc(o.curso) + ' · ' : ''}ID <span class="font-mono">${esc(o.id)}</span></p>
         <div class="mt-3">
           <div class="flex justify-between text-sm"><span class="text-slate-700"><b>${o.inscritos}</b> de ${o.vagas} vagas · <button data-of="vagas" data-id="${esc(o.id)}" class="text-ulbra-600 font-medium hover:underline">alterar</button></span><span class="text-slate-500">${Math.max(0, o.vagas - o.inscritos)} restante(s)</span></div>
@@ -1723,6 +1735,7 @@ const Admin = {
     $('of-id').value = o ? o.id : '';
     $('of-nome').value = o ? o.nome : '';
     $('of-ministrante').value = o ? (o.ministrante || '') : '';
+    $('of-data').value = o ? (o.data || '') : '';
     const cursos = this.cursosOficina && this.cursosOficina.length ? this.cursosOficina : CONFIG.CURSOS.filter((c) => c !== 'Comunidade').concat(['Todos os cursos']);
     $('of-curso').innerHTML = '<option value="">Selecione…</option>' + cursos.map((c) => `<option>${esc(c)}</option>`).join('');
     $('of-curso').value = o ? (o.curso || '') : '';
@@ -1761,7 +1774,7 @@ const Admin = {
     $('of-erro').hidden = true;
     carregando(btn, true, 'Salvando…');
     try {
-      await this.api({ action: 'salvarOficina', oficina: { id: $('of-id').value || undefined, nome: $('of-nome').value, vagas: $('of-vagas').value, ministrante: $('of-ministrante').value, curso: $('of-curso').value } }, 60000);
+      await this.api({ action: 'salvarOficina', oficina: { id: $('of-id').value || undefined, nome: $('of-nome').value, vagas: $('of-vagas').value, ministrante: $('of-ministrante').value, curso: $('of-curso').value, data: $('of-data').value } }, 60000);
       $('modal-oficina').hidden = true;
       toast('Oficina salva.', 'ok');
       this.carregarOficinas();
@@ -1801,7 +1814,7 @@ const Admin = {
     try {
       const r = await this.api({ action: 'listarInscricoes', oficinaId: o.id }, 60000);
       this.inscritos = r.inscricoes;
-      $('mi-sub').textContent = [o.ministrante ? `Ministrante: ${o.ministrante}` : '', o.curso, `${this.inscritos.length} de ${o.vagas} vagas preenchidas`, `ID ${o.id}`].filter(Boolean).join(' · ');
+      $('mi-sub').textContent = [o.data ? dataComSemana(o.data) : '', o.ministrante ? `Ministrante: ${o.ministrante}` : '', o.curso, `${this.inscritos.length} de ${o.vagas} vagas preenchidas`, `ID ${o.id}`].filter(Boolean).join(' · ');
       const tb = $('mi-tabela');
       if (!this.inscritos.length) { tb.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Nenhum inscrito ainda.</td></tr>'; return; }
       tb.innerHTML = this.inscritos.map((p, i) => `<tr>
@@ -1838,7 +1851,7 @@ const Admin = {
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('Planilha1', { views: [{ state: 'frozen', ySplit: 1 }] });
       ws.columns = [{ header: 'Nome', key: 'nome', width: 46 }, { header: 'Curso', key: 'curso', width: 30 }, { header: 'Oficina', key: 'oficina', width: 46 },
-                    { header: 'Ministrante', key: 'ministrante', width: 40 }, { header: 'Curso da oficina', key: 'cursoOf', width: 34 }];
+                    { header: 'Data da oficina', key: 'dataOf', width: 28 }, { header: 'Ministrante', key: 'ministrante', width: 40 }, { header: 'Curso da oficina', key: 'cursoOf', width: 34 }];
       ws.getRow(1).height = 30;
       ws.getRow(1).eachCell((c) => {
         c.font = { name: 'Aptos Narrow', size: 22, bold: true };
@@ -1846,14 +1859,21 @@ const Admin = {
         c.alignment = { horizontal: 'center', vertical: 'middle' };
         c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       });
+      const md = /^(\d{4})-(\d{2})-(\d{2})/.exec(o.data || '');
+      const dataOf = md ? new Date(Date.UTC(+md[1], +md[2] - 1, +md[3])) : '';
       [...this.inscritos].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }))
-        .forEach((p) => { ws.addRow({ nome: p.nome, curso: p.curso, oficina: o.nome, ministrante: o.ministrante || '', cursoOf: o.curso || '' }).font = { name: 'Aptos Narrow', size: 11 }; });
-      ws.autoFilter = { from: 'A1', to: `E${this.inscritos.length + 1}` };
+        .forEach((p) => {
+          const row = ws.addRow({ nome: p.nome, curso: p.curso, oficina: o.nome, dataOf, ministrante: o.ministrante || '', cursoOf: o.curso || '' });
+          row.font = { name: 'Aptos Narrow', size: 11 };
+          row.getCell('dataOf').numFmt = 'dd/mm/yyyy';
+          row.getCell('dataOf').alignment = { horizontal: 'center' };
+        });
+      ws.autoFilter = { from: 'A1', to: `F${this.inscritos.length + 1}` };
       const buf = await wb.xlsx.writeBuffer();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
       const slug = String(o.nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
-      a.download = `inscritos_${slug || o.id}.xlsx`;
+      a.download = `inscritos_${slug || o.id}${o.data ? '_' + o.data : ''}.xlsx`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
       toast(`${this.inscritos.length} inscrito(s) exportado(s).`, 'ok');
@@ -1864,7 +1884,7 @@ const Admin = {
   imprimirCartazOficinas() {
     const w = window.open('', '_blank');
     if (!w) return toast('Permita pop-ups para imprimir o cartaz.', 'alerta');
-    const abertas = (this.oficinas || []).filter((o) => o.inscricoes_abertas);
+    const abertas = (this.oficinas || []).filter((o) => o.inscricoes_abertas).sort((a, b) => (a.data || '9999').localeCompare(b.data || '9999'));
     const url = this.urlInscricao();
     w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Inscrição em oficinas</title>
       <style>@page{size:A4;margin:18mm}body{font-family:Arial,sans-serif;text-align:center;color:#0b2545}
@@ -1873,7 +1893,7 @@ const Admin = {
       .tag{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#64748b}.url{font-size:11px;color:#64748b;word-break:break-all;margin-top:14px}</style></head>
       <body><p class="tag">ILES/ULBRA Itumbiara</p><h1>Inscreva-se nas oficinas</h1><p class="sub">Vagas limitadas · exclusivo para alunos</p>
       <img src="${qrPng(url, 900)}" alt="QR Code">
-      ${abertas.length ? `<br><ul>${abertas.map((o) => `<li><b>${esc(o.nome)}</b>${o.ministrante ? ` – ${esc(o.ministrante)}` : ''}${o.curso ? ` <span style="color:#64748b">(${esc(o.curso)})</span>` : ''} · ${o.vagas} vagas</li>`).join('')}</ul>` : ''}
+      ${abertas.length ? `<br><ul>${abertas.map((o) => `<li><b>${esc(o.nome)}</b>${o.data ? ` – ${esc(dataComSemana(o.data))}` : ''}${o.ministrante ? ` – ${esc(o.ministrante)}` : ''}${o.curso ? ` <span style="color:#64748b">(${esc(o.curso)})</span>` : ''} · ${o.vagas} vagas</li>`).join('')}</ul>` : ''}
       <p class="url">${esc(url)}</p>
       <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
     w.document.close();
